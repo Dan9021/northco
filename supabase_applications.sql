@@ -195,6 +195,55 @@ create trigger applications_before_update
 before update on public.applications
 for each row execute function public.applications_before_update();
 
+-- ------------------------------------------------------------ application drafts
+-- Incomplete answers are stored separately from submitted applications and are private to their author.
+begin;
+
+create table if not exists public.application_drafts (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  opening_id uuid not null references public.job_openings(id) on delete cascade,
+  answers jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now(),
+  primary key (user_id, opening_id),
+  constraint application_drafts_answers_object
+    check (jsonb_typeof(answers) = 'object' and pg_column_size(answers) <= 65536)
+);
+
+alter table public.application_drafts enable row level security;
+revoke all on public.application_drafts from anon, authenticated;
+grant select, insert, update, delete on public.application_drafts to authenticated;
+
+drop policy if exists application_drafts_select_own on public.application_drafts;
+create policy application_drafts_select_own
+on public.application_drafts for select to authenticated
+using (auth.uid() = user_id);
+
+drop policy if exists application_drafts_insert_own on public.application_drafts;
+create policy application_drafts_insert_own
+on public.application_drafts for insert to authenticated
+with check (
+  auth.uid() = user_id
+  and not public.is_banned()
+  and public.opening_is_open(opening_id)
+);
+
+drop policy if exists application_drafts_update_own on public.application_drafts;
+create policy application_drafts_update_own
+on public.application_drafts for update to authenticated
+using (auth.uid() = user_id)
+with check (
+  auth.uid() = user_id
+  and not public.is_banned()
+  and public.opening_is_open(opening_id)
+);
+
+drop policy if exists application_drafts_delete_own on public.application_drafts;
+create policy application_drafts_delete_own
+on public.application_drafts for delete to authenticated
+using (auth.uid() = user_id);
+
+commit;
+
 -- Optional: a first opening so the Employment page is not empty. Delete or edit it in the admin panel.
 insert into public.job_openings (title, description)
 select 'Store Staff', 'Help players, keep the store tidy and welcome new visitors.'

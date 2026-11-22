@@ -654,7 +654,6 @@
         <a href="index.html">Home</a>
         <a href="employment.html">Employment</a>
         <a href="profile.html" aria-current="page">Profile</a>
-        <a href="admin.html">Admin</a>
       </nav>
     </div>
   </header>
@@ -703,50 +702,7 @@
             </section>
             <button id="discord-logout" class="btn btn-ghost profile-button" type="button">Log out</button>
             </div>
-            <section id="admin-panel" class="admin-panel" aria-labelledby="admin-panel-title" hidden>
-              <h3 id="admin-panel-title">Admin Panel</h3>
-              <p class="settings-intro">Manage Northco profiles and account roles.</p>
-              <div class="notice-settings">
-                <form id="notice-settings-form">
-                  <label class="settings-field" for="notice-setting-input">Navbar notice text
-                    <input class="settings-input" id="notice-setting-input" name="notice" type="text" maxlength="240">
-                  </label>
-                  <button id="notice-setting-save" class="btn btn-primary profile-button" type="submit">Save text</button>
-                </form>
-              </div>
-              <div id="admin-list" class="admin-list"></div>
-              <p id="admin-message" class="admin-message" role="status" aria-live="polite"></p>
-            </section>
             </div>
-            <section id="applications-panel" class="admin-panel apps-panel" aria-labelledby="applications-title" hidden>
-              <h3 id="applications-title">Applications</h3>
-              <p class="settings-intro">Open roles and staff applications. Applicants only see their own status.</p>
-
-              <h4>Open roles</h4>
-              <form id="opening-form" class="opening-form">
-                <label class="settings-field" for="opening-title">Role title
-                  <input class="settings-input" id="opening-title" type="text" minlength="2" maxlength="80" required>
-                </label>
-                <label class="settings-field" for="opening-desc">Description (optional)
-                  <textarea class="settings-input" id="opening-desc" rows="2" maxlength="1000"></textarea>
-                </label>
-                <button id="opening-add" class="btn btn-primary profile-button" type="submit">Add role</button>
-              </form>
-              <div id="openings-list" class="admin-list"></div>
-
-              <h4>Applications</h4>
-              <label class="settings-field apps-filter" for="apps-filter">Show
-                <select class="settings-input" id="apps-filter">
-                  <option value="pending">Pending</option>
-                  <option value="accepted">Accepted</option>
-                  <option value="rejected">Not accepted</option>
-                  <option value="all">All</option>
-                </select>
-              </label>
-              <p id="apps-count" class="settings-intro"></p>
-              <div id="apps-list" class="admin-list"></div>
-              <p id="apps-message" class="admin-message" role="status" aria-live="polite"></p>
-            </section>
           </div>
           <p id="profile-error" class="profile-error" role="alert" hidden></p>
         </div>
@@ -819,22 +775,6 @@
   const settingsShowId = document.getElementById("settings-show-id");
   const settingsSave = document.getElementById("settings-save");
   const settingsMessage = document.getElementById("settings-message");
-  const adminPanel = document.getElementById("admin-panel");
-  const adminList = document.getElementById("admin-list");
-  const adminMessage = document.getElementById("admin-message");
-  const noticeSettingsForm = document.getElementById("notice-settings-form");
-  const noticeSettingInput = document.getElementById("notice-setting-input");
-  const noticeSettingSave = document.getElementById("notice-setting-save");
-  const appsPanel = document.getElementById("applications-panel");
-  const openingForm = document.getElementById("opening-form");
-  const openingTitle = document.getElementById("opening-title");
-  const openingDesc = document.getElementById("opening-desc");
-  const openingAdd = document.getElementById("opening-add");
-  const openingsList = document.getElementById("openings-list");
-  const appsFilter = document.getElementById("apps-filter");
-  const appsCount = document.getElementById("apps-count");
-  const appsList = document.getElementById("apps-list");
-  const appsMessage = document.getElementById("apps-message");
 
   let supabaseClient = null;
   let currentUser = null;
@@ -900,17 +840,6 @@
   function renderUser(user) {
     loadSeq++;                       // cancels any load that belongs to the previous state
     loadingEl.hidden = true;
-    adminPanel.hidden = true;
-    adminList.replaceChildren();
-    adminMessage.textContent = "";
-    appsPanel.hidden = true;
-    openingsList.replaceChildren();
-    appsList.replaceChildren();
-    appsMessage.textContent = "";
-    appsCount.textContent = "";
-    adminOpenings = [];
-    adminApps = [];
-    openAppIds.clear();
     settingsMessage.textContent = "";
     formTouched = false;
 
@@ -956,7 +885,7 @@
     const seq = loadSeq;
     const { data: profile, error } = await supabaseClient
       .from("profiles")
-      .select("display_name, avatar_url, show_email, show_discord_id, is_admin, banned")
+      .select("display_name, avatar_url, show_email, show_discord_id, banned")
       .eq("id", user.id)
       .maybeSingle();
     if (seq !== loadSeq) return;
@@ -976,323 +905,7 @@
 
     currentProfile = profile;
     applyProfile(user, profile, !formTouched);
-    if (profile && profile.is_admin === true) {
-      await Promise.all([loadAdminPanel(user, seq), loadApplicationsAdmin(user, seq)]);
-    }
   }
-
-  async function loadAdminPanel(user, seq) {
-    adminPanel.hidden = false;
-    adminMessage.textContent = "Loading profiles…";
-    const results = await Promise.all([
-      supabaseClient.from("site_settings").select("value").eq("key", "navbar_notice").maybeSingle(),
-      supabaseClient.from("profiles").select("id, display_name, is_admin, banned").order("display_name", { ascending: true })
-    ]);
-    if (seq !== loadSeq) return;
-
-    const noticeRes = results[0];
-    const listRes = results[1];
-    if (!noticeRes.error && noticeRes.data) noticeSettingInput.value = noticeRes.data.value || "";
-    if (listRes.error) {
-      adminMessage.textContent = "Couldn't load profiles: " + listRes.error.message;
-      return;
-    }
-
-    adminMessage.textContent = "";
-    adminList.replaceChildren();
-    listRes.data.forEach(function (item) {
-      const isSelf = item.id === user.id;
-      const label = item.display_name || "Discord user";
-      const row = document.createElement("div");
-      row.className = "admin-user";
-
-      const copy = document.createElement("div");
-      copy.className = "admin-user-copy";
-      const name = document.createElement("strong");
-      name.textContent = label + (isSelf ? " (you)" : "");
-      const id = document.createElement("span");
-      id.textContent = item.id;
-      copy.append(name, id);
-
-      const roleButton = document.createElement("button");
-      roleButton.type = "button";
-      roleButton.className = "admin-toggle";
-      roleButton.textContent = item.is_admin ? "Remove admin" : "Make admin";
-
-      const banButton = document.createElement("button");
-      banButton.type = "button";
-      banButton.className = "admin-ban";
-      banButton.textContent = item.banned ? "Unban" : "Ban";
-
-      if (isSelf) {
-        // Stops an admin from locking themselves out by accident.
-        roleButton.disabled = true;
-        banButton.disabled = true;
-        roleButton.title = banButton.title = "You can't change your own role or status here.";
-      }
-
-      async function change(patch, confirmText, doneText) {
-        if (confirmText && !window.confirm(confirmText)) return;
-        roleButton.disabled = true;
-        banButton.disabled = true;
-        const { error: updateError } = await supabaseClient.from("profiles").update(patch).eq("id", item.id);
-        roleButton.disabled = isSelf;
-        banButton.disabled = isSelf;
-        if (updateError) {
-          adminMessage.textContent = "Couldn't update " + label + ": " + updateError.message;
-          return;
-        }
-        Object.assign(item, patch);
-        roleButton.textContent = item.is_admin ? "Remove admin" : "Make admin";
-        banButton.textContent = item.banned ? "Unban" : "Ban";
-        adminMessage.textContent = doneText;
-      }
-
-      roleButton.addEventListener("click", function () {
-        change({ is_admin: !item.is_admin },
-          item.is_admin ? "" : "Make " + label + " an admin? Admins can ban users and edit the navbar text.",
-          "Role updated.");
-      });
-      banButton.addEventListener("click", function () {
-        change({ banned: !item.banned },
-          item.banned ? "" : "Ban " + label + "?",
-          "Profile status updated.");
-      });
-
-      row.append(copy, roleButton, banButton);
-      adminList.append(row);
-    });
-  }
-
-  // ---- Applications admin (rules are enforced by supabase_applications.sql, this only draws and sends)
-  const STATUS_LABEL = { pending: "Pending", accepted: "Accepted", rejected: "Not accepted" };
-  let adminOpenings = [];
-  let adminApps = [];
-  const openAppIds = new Set();
-
-  function textEl(tag, className, text) {
-    const node = document.createElement(tag);
-    if (className) node.className = className;
-    if (text != null) node.textContent = text;
-    return node;
-  }
-
-  async function loadApplicationsAdmin(user, seq) {
-    appsPanel.hidden = false;
-    appsMessage.textContent = "Loading applications…";
-    const results = await Promise.all([
-      supabaseClient.from("job_openings").select("id, title, description, is_open, created_at").order("created_at", { ascending: true }),
-      supabaseClient.from("applications")
-        .select("id, role_title, discord_name, roblox_username, timezone, experience, motivation, status, admin_note, created_at")
-        .order("created_at", { ascending: false })
-        .limit(300)
-    ]);
-    if (seq !== loadSeq) return;
-
-    if (results[0].error || results[1].error) {
-      const failed = results[0].error || results[1].error;
-      appsMessage.textContent = "Couldn't load applications: " + failed.message + " (has supabase_applications.sql been run?)";
-      return;
-    }
-    appsMessage.textContent = "";
-    adminOpenings = results[0].data || [];
-    adminApps = results[1].data || [];
-    renderOpenings();
-    renderApplications();
-  }
-
-  function refreshApplicationsAdmin() {
-    if (currentUser) return loadApplicationsAdmin(currentUser, loadSeq);
-  }
-
-  function renderOpenings() {
-    openingsList.replaceChildren();
-    if (!adminOpenings.length) {
-      openingsList.append(textEl("p", "settings-intro", "No roles yet. Add one above so people can apply."));
-      return;
-    }
-    adminOpenings.forEach(function (item) {
-      const row = textEl("div", "admin-user");
-      const copy = textEl("div", "admin-user-copy");
-      copy.append(textEl("strong", null, item.title), textEl("span", null, item.is_open ? "Open for applications" : "Closed"));
-
-      const toggle = textEl("button", "admin-toggle", item.is_open ? "Close" : "Reopen");
-      toggle.type = "button";
-      const remove = textEl("button", "admin-ban", "Delete");
-      remove.type = "button";
-
-      toggle.addEventListener("click", async function () {
-        toggle.disabled = remove.disabled = true;
-        const { error } = await supabaseClient.from("job_openings").update({ is_open: !item.is_open }).eq("id", item.id);
-        if (error) {
-          appsMessage.textContent = "Couldn't update the role: " + error.message;
-          toggle.disabled = remove.disabled = false;
-          return;
-        }
-        item.is_open = !item.is_open;
-        renderOpenings();
-        appsMessage.textContent = item.is_open ? "Role reopened." : "Role closed.";
-      });
-
-      remove.addEventListener("click", async function () {
-        if (!window.confirm("Delete the role \"" + item.title + "\"? Existing applications for it are kept.")) return;
-        toggle.disabled = remove.disabled = true;
-        const { error } = await supabaseClient.from("job_openings").delete().eq("id", item.id);
-        if (error) {
-          appsMessage.textContent = "Couldn't delete the role: " + error.message;
-          toggle.disabled = remove.disabled = false;
-          return;
-        }
-        adminOpenings = adminOpenings.filter(function (o) { return o.id !== item.id; });
-        renderOpenings();
-        appsMessage.textContent = "Role deleted.";
-      });
-
-      row.append(copy, toggle, remove);
-      openingsList.append(row);
-    });
-  }
-
-  function appField(label, value) {
-    const wrap = textEl("div", "app-field");
-    wrap.append(textEl("strong", null, label), textEl("p", null, value || "—"));
-    return wrap;
-  }
-
-  function buildAppItem(app) {
-    const details = document.createElement("details");
-    details.className = "app-item";
-    details.open = openAppIds.has(app.id);
-    details.addEventListener("toggle", function () {
-      if (details.open) openAppIds.add(app.id); else openAppIds.delete(app.id);
-    });
-
-    const summary = document.createElement("summary");
-    const who = textEl("span", "app-who", (app.discord_name || "Discord user") + " · " + app.role_title);
-    who.append(textEl("small", null, "Roblox: " + app.roblox_username + " · " + new Date(app.created_at).toLocaleDateString()));
-    summary.append(who, textEl("span", "app-badge app-" + app.status, STATUS_LABEL[app.status] || app.status));
-
-    const body = textEl("div", "app-body");
-    body.append(
-      appField("Roblox username", app.roblox_username),
-      appField("Time zone and availability", app.timezone),
-      appField("Experience", app.experience),
-      appField("Why they want to join", app.motivation)
-    );
-
-    const noteLabel = textEl("label", "settings-field", "Private note (only admins see it)");
-    const note = document.createElement("textarea");
-    note.className = "settings-input";
-    note.rows = 2;
-    note.maxLength = 1000;
-    note.value = app.admin_note || "";
-    noteLabel.append(note);
-    body.append(noteLabel);
-
-    const actions = textEl("div", "app-actions");
-    const buttons = [];
-    function addButton(label, className, handler) {
-      const b = textEl("button", className, label);
-      b.type = "button";
-      b.addEventListener("click", handler);
-      buttons.push(b);
-      actions.append(b);
-    }
-    async function review(status) {
-      buttons.forEach(function (b) { b.disabled = true; });
-      const patch = { status: status, admin_note: note.value.trim() || null };
-      const { error } = await supabaseClient.from("applications").update(patch).eq("id", app.id);
-      if (error) {
-        appsMessage.textContent = "Couldn't update the application: " + error.message;
-        buttons.forEach(function (b) { b.disabled = false; });
-        return;
-      }
-      Object.assign(app, patch);
-      renderApplications();
-      appsMessage.textContent = "Application updated.";
-    }
-    if (app.status !== "accepted") addButton("Accept", "admin-toggle", function () { review("accepted"); });
-    if (app.status !== "rejected") addButton("Not accepted", "admin-toggle", function () { review("rejected"); });
-    if (app.status !== "pending") addButton("Back to pending", "admin-toggle", function () { review("pending"); });
-    addButton("Save note", "admin-toggle", function () { review(app.status); });
-    addButton("Delete", "admin-ban app-danger", async function () {
-      if (!window.confirm("Delete this application permanently?")) return;
-      buttons.forEach(function (b) { b.disabled = true; });
-      const { error } = await supabaseClient.from("applications").delete().eq("id", app.id);
-      if (error) {
-        appsMessage.textContent = "Couldn't delete the application: " + error.message;
-        buttons.forEach(function (b) { b.disabled = false; });
-        return;
-      }
-      adminApps = adminApps.filter(function (a) { return a.id !== app.id; });
-      renderApplications();
-      appsMessage.textContent = "Application deleted.";
-    });
-    body.append(actions);
-
-    details.append(summary, body);
-    return details;
-  }
-
-  function renderApplications() {
-    const filter = appsFilter.value;
-    const shown = adminApps.filter(function (a) { return filter === "all" || a.status === filter; });
-    const pending = adminApps.filter(function (a) { return a.status === "pending"; }).length;
-    appsCount.textContent = pending + " pending · " + adminApps.length + " in total";
-    appsList.replaceChildren();
-    if (!shown.length) {
-      appsList.append(textEl("p", "settings-intro", "No applications here."));
-      return;
-    }
-    shown.forEach(function (app) { appsList.append(buildAppItem(app)); });
-  }
-
-  appsFilter.addEventListener("change", renderApplications);
-
-  openingForm.addEventListener("submit", async function (event) {
-    event.preventDefault();
-    const title = openingTitle.value.trim();
-    if (title.length < 2) {
-      appsMessage.textContent = "The role title needs at least 2 characters.";
-      return;
-    }
-    openingAdd.disabled = true;
-    appsMessage.textContent = "Adding role…";
-    const { error } = await supabaseClient.from("job_openings").insert({ title: title, description: openingDesc.value.trim() });
-    openingAdd.disabled = false;
-    if (error) {
-      appsMessage.textContent = "Couldn't add the role: " + error.message;
-      return;
-    }
-    openingForm.reset();
-    await refreshApplicationsAdmin();
-    appsMessage.textContent = "Role added. It is now visible on the Employment page.";
-  });
-
-  noticeSettingsForm.addEventListener("submit", async function (event) {
-    event.preventDefault();
-    const value = noticeSettingInput.value.trim();
-    if (!value) {
-      adminMessage.textContent = "The navbar text cannot be empty.";
-      return;
-    }
-
-    noticeSettingSave.disabled = true;
-    adminMessage.textContent = "Saving navbar text…";
-    const { error } = await supabaseClient
-      .from("site_settings")
-      .upsert({ key: "navbar_notice", value, updated_at: new Date().toISOString() }, { onConflict: "key" });
-    noticeSettingSave.disabled = false;
-
-    if (error) {
-      adminMessage.textContent = "Couldn't save the navbar text: " + error.message;
-      return;
-    }
-
-    document.querySelector(".notice").textContent = value;
-    try { sessionStorage.setItem(NOTICE_CACHE_KEY, value); } catch (e) {}
-    adminMessage.textContent = "Navbar text updated.";
-  });
 
   settingsForm.addEventListener("input", function () {
     formTouched = true;

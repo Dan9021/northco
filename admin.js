@@ -8,6 +8,8 @@
   var SUPABASE_PUBLISHABLE_KEY = "sb_publishable_GYpISpry5P7Ntnru55ZS3A_a7b3N4hq";
   var NOTICE_ROW = "navbar_notice";
   var NOTICE_CACHE = "northco-notice";
+  var TERMS_ROW = "terms_of_service";
+  var TERMS_CACHE = "northco-terms";
   var STATUS_LABEL = { pending: "Pending", accepted: "Accepted", rejected: "Not accepted" };
 
   var gate = document.getElementById("admin-gate");
@@ -20,6 +22,9 @@
   var noticeForm = document.getElementById("notice-form");
   var noticeInput = document.getElementById("notice-input");
   var noticeNote = document.getElementById("notice-note");
+  var termsForm = document.getElementById("terms-form");
+  var termsInput = document.getElementById("terms-input");
+  var termsNote = document.getElementById("terms-note");
   var appsFilter = document.getElementById("apps-filter");
   var appsList = document.getElementById("apps-list");
   var openingForm = document.getElementById("opening-form");
@@ -32,13 +37,15 @@
     overview: document.getElementById("panel-overview"),
     applications: document.getElementById("panel-applications"),
     openings: document.getElementById("panel-openings"),
-    users: document.getElementById("panel-users")
+    users: document.getElementById("panel-users"),
+    terms: document.getElementById("panel-terms")
   };
 
   var client = null;
   var user = null;
   var shownUserId;            // undefined until the first session has been handled
   var noticeDirty = false;
+  var termsDirty = false;
   var currentTab = "overview";
   var seqs = { overview: 0, applications: 0, openings: 0, users: 0 };
   var searchTimer = null;
@@ -221,6 +228,66 @@
     try { sessionStorage.setItem(NOTICE_CACHE, value); } catch (e) {}
     var live = document.querySelector(".notice");
     if (live) live.textContent = value;
+  });
+
+  async function loadTerms() {
+    if (!termsInput || termsDirty) return;
+    var result = await client.from("site_settings").select("value").eq("key", TERMS_ROW).maybeSingle();
+    if (result.error) {
+      termsNote.textContent = "Couldn't load the current terms: " + friendlyError(result.error);
+      return;
+    }
+    if (result.data && typeof result.data.value === "string") {
+      termsInput.value = result.data.value;
+      return;
+    }
+    try {
+      var response = await fetch("terms.html");
+      if (!response.ok) return;
+      var page = new DOMParser().parseFromString(await response.text(), "text/html");
+      var doc = page.querySelector("#terms-body");
+      if (!doc) return;
+      var lines = [];
+      Array.prototype.forEach.call(doc.children, function (node) {
+        if (node.matches(".back, .updated")) return;
+        if (/^H[1-3]$/.test(node.tagName)) {
+          lines.push("#".repeat(Number(node.tagName.slice(1))) + " " + node.textContent.trim());
+        } else if (node.tagName === "UL" || node.tagName === "OL") {
+          Array.prototype.forEach.call(node.querySelectorAll("li"), function (item) { lines.push("- " + item.textContent.trim()); });
+        } else if (node.tagName === "P") {
+          lines.push(node.textContent.trim());
+        }
+      });
+      termsInput.value = lines.filter(Boolean).join("\n\n");
+    } catch (error) {
+      termsNote.textContent = "Couldn't load the default terms. You can still enter them here.";
+    }
+  }
+
+  termsInput.addEventListener("input", function () { termsDirty = true; termsNote.textContent = ""; });
+
+  termsForm.addEventListener("submit", async function (event) {
+    event.preventDefault();
+    var value = termsInput.value.trim();
+    if (!value) {
+      termsNote.textContent = "The terms can't be empty.";
+      return;
+    }
+    var submit = termsForm.querySelector("button[type=submit]");
+    submit.disabled = true;
+    termsNote.textContent = "Saving…";
+    var result = await client.from("site_settings").upsert(
+      { key: TERMS_ROW, value: value, updated_at: new Date().toISOString() },
+      { onConflict: "key" }
+    );
+    submit.disabled = false;
+    if (result.error) {
+      termsNote.textContent = "Couldn't save the terms: " + friendlyError(result.error);
+      return;
+    }
+    termsDirty = false;
+    termsNote.textContent = "Saved. The public Terms of Service page is updated.";
+    try { sessionStorage.setItem(TERMS_CACHE, JSON.stringify({ value: value, updated_at: new Date().toISOString() })); } catch (e) {}
   });
 
   // ---------------------------------------------------------- applications
@@ -732,7 +799,8 @@
     overview: loadOverview,
     applications: loadApplications,
     openings: loadOpenings,
-    users: loadUsers
+    users: loadUsers,
+    terms: loadTerms
   };
 
   // --------------------------------------------------------------- session
@@ -743,6 +811,7 @@
     shownUserId = id;
     user = next;
     noticeDirty = false;
+    termsDirty = false;
     say("");
     if (!user) {
       showSignIn();

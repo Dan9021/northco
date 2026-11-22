@@ -25,6 +25,11 @@
   var questions = [];
   var mine = [];
   var loadSeq = 0;
+  var draftSaveTimer = null;
+  var draftSaveChain = Promise.resolve();
+  var draftSaveVersion = 0;
+  var draftAnswers = {};
+  var draftLoadError = false;
 
   function el(tag, className, text) {
     var node = document.createElement(tag);
@@ -35,6 +40,43 @@
 
   function say(text) {
     messageEl.textContent = text || "";
+  }
+
+  function collectAnswers(controls) {
+    var answers = {};
+    controls.forEach(function (item) {
+      var value = item.control.value;
+      if (value.trim()) answers[item.question.id] = value;
+    });
+    return answers;
+  }
+
+  function scheduleDraftSave(answers, note) {
+    var version = ++draftSaveVersion;
+    var ownerId = user && user.id;
+    var openingId = opening && opening.id;
+    draftAnswers = answers;
+    if (!ownerId || !openingId) return;
+    clearTimeout(draftSaveTimer);
+    note.textContent = "Saving draft…";
+    draftSaveTimer = setTimeout(function () {
+      draftSaveTimer = null;
+      if (!user || user.id !== ownerId || !opening || opening.id !== openingId) return;
+      draftSaveChain = draftSaveChain.catch(function () {}).then(async function () {
+        var result = await client.from("application_drafts").upsert({
+          user_id: ownerId,
+          opening_id: openingId,
+          answers: answers,
+          updated_at: new Date().toISOString()
+        }, { onConflict: "user_id,opening_id" });
+        if (version !== draftSaveVersion) return;
+        note.textContent = result.error
+          ? "Draft autosave is unavailable. Your answers may not be saved."
+          : "Draft saved automatically.";
+      }).catch(function () {
+        if (version === draftSaveVersion) note.textContent = "Draft autosave is unavailable. Your answers may not be saved.";
+      });
+    }, 700);
   }
 
   function friendlyError(error) {
@@ -126,6 +168,8 @@
       control.id = id;
       control.maxLength = q.max_length;
       control.required = !!q.required;
+      var savedValue = draftAnswers[q.id];
+      if (typeof savedValue === "string") control.value = savedValue;
       if (q.help) {
         var hint = el("span", "apply-hint", q.help);
         hint.id = id + "-hint";
@@ -154,6 +198,17 @@
     note.setAttribute("role", "status");
     form.append(consent, submit, note);
 
+    controls.forEach(function (item) {
+      item.control.addEventListener("input", function () {
+        scheduleDraftSave(collectAnswers(controls), note);
+      });
+    });
+    note.textContent = draftLoadError
+      ? "Draft autosave is unavailable. Your answers may not be saved."
+      : Object.keys(draftAnswers).length
+        ? "Your saved draft was restored. Changes save automatically."
+        : "Your answers save automatically as you type.";
+
     form.addEventListener("submit", function (event) {
       event.preventDefault();
       var answers = {};
@@ -174,8 +229,12 @@
   }
 
   async function send(answers, submit, note) {
+    clearTimeout(draftSaveTimer);
+    draftSaveTimer = null;
+    draftSaveVersion += 1;
     submit.disabled = true;
     note.textContent = "Sending…";
+    await draftSaveChain;
     // role_title and discord_name are filled in by the database, and the answers are checked against the real questions.
     var result = await client.from("applications").insert({
       user_id: user.id,
@@ -185,9 +244,17 @@
     submit.disabled = false;
     if (result.error) {
       note.textContent = friendlyError(result.error);
+      scheduleDraftSave(answers, note);
       return;
     }
-    say("Application sent. You can follow it on the Employment page.");
+    var draftCleanup = await client.from("application_drafts")
+      .delete()
+      .eq("user_id", user.id)
+      .eq("opening_id", opening.id);
+    draftAnswers = {};
+    say(draftCleanup.error
+      ? "Application sent. The saved draft could not be cleared, but it won't affect your application."
+      : "Application sent. You can follow it on the Employment page.");
     await refresh();
   }
 
@@ -240,7 +307,13 @@
             .select("id, status, created_at")
             .eq("opening_id", roleId)
             .order("created_at", { ascending: false })
-        : Promise.resolve({ data: [], error: null })
+        : Promise.resolve({ data: [], error: null }),
+      user
+        ? client.from("application_drafts")
+            .select("answers")
+            .eq("opening_id", roleId)
+            .maybeSingle()
+        : Promise.resolve({ data: null, error: null })
     ];
     var results = await Promise.all(queries);
     if (seq !== loadSeq) return;
@@ -255,6 +328,10 @@
     opening = results[0].data;
     questions = results[1].error ? [] : (results[1].data || []);
     mine = results[2].error ? [] : (results[2].data || []);
+    draftLoadError = !!results[3].error;
+    draftAnswers = results[3].data && results[3].data.answers && typeof results[3].data.answers === "object"
+      ? results[3].data.answers
+      : {};
     renderRole();
     renderAccount();
     renderForm();
@@ -264,6 +341,10 @@
     var next = session ? session.user : null;
     var id = next ? next.id : null;
     if (id === shownUserId) return;
+    clearTimeout(draftSaveTimer);
+    draftSaveTimer = null;
+    draftSaveVersion += 1;
+    draftAnswers = {};
     shownUserId = id;
     user = next;
     say("");
