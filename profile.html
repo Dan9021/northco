@@ -1,0 +1,1395 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Northco Profile</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap">
+<style>
+  :root { --bg: #162076; --sale: #ffd23f; color-scheme: light; }
+  html, body { margin: 0; background: #ffffff; }
+  body { font-family: "Poppins", system-ui, -apple-system, "Segoe UI", sans-serif; }
+  /* Page that appears once the screen is white: a blue bar with the logo and three links. */
+  .site {
+    position: fixed;
+    inset: 0;
+    z-index: 2;
+    overflow-y: auto;
+    background: #ffffff;
+    opacity: 0;
+    pointer-events: none;
+    animation: appear 0.3s ease 5.45s forwards;
+  }
+  @keyframes appear {
+    from { opacity: 0; pointer-events: none; }
+    to   { opacity: 1; pointer-events: auto; }
+  }
+
+  .bar {
+    background: var(--bg);
+    padding-top: env(safe-area-inset-top, 0px);
+    animation: bar-in 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) 5.5s backwards;
+  }
+  @keyframes bar-in {
+    from { transform: translateY(-100%); }
+    to   { transform: none; }
+  }
+
+  .bar-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    height: 64px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    box-sizing: border-box;
+    font-family: "Poppins", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+
+  .logo {
+    display: block;
+    flex: none;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    border-radius: 6px;
+  }
+  .logo svg { display: block; height: 32px; width: auto; }
+
+  .nav {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    min-width: 0;
+  }
+  .nav a {
+    padding: 6px 0;
+    border-bottom: 2px solid transparent;
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    line-height: 1.4;
+    text-decoration: none;
+    transition: color 0.15s ease, border-color 0.15s ease;
+  }
+  .nav a:hover { color: #ffffff; }
+  .nav a[aria-current="page"] { color: #ffffff; border-bottom-color: #ffffff; }
+
+  .logo:focus-visible,
+  .nav a:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 4px;
+  }
+
+  .notice {
+    margin: 0;
+    padding-block: 10px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    background: #e9ecfb;
+    border-bottom: 1px solid rgba(22, 32, 118, 0.14);
+    color: var(--bg);
+    font-family: "Poppins", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.5;
+    text-align: center;
+    animation: notice-in 0.5s ease 5.9s backwards;
+  }
+  @keyframes notice-in {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  /* Homepage */
+  .home {
+    --ink: #0f1640;
+    --muted: #4b5382;
+    --tint: #e9ecfb;
+    --line: rgba(22, 32, 118, 0.14);
+    --sale: #ffd23f;
+    color: var(--ink);
+    font-family: "Poppins", system-ui, -apple-system, "Segoe UI", sans-serif;
+    line-height: 1.55;
+  }
+  .home h1, .home h2, .home h3, .home p { margin: 0; }
+
+  .wrap {
+    width: 100%;
+    max-width: 1120px;
+    margin-inline: auto;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    box-sizing: border-box;
+  }
+
+  .hero {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    align-items: center;
+    gap: 40px;
+    padding-block: 56px 48px;
+  }
+  .hero-copy { min-width: 0; }
+  .hero h1 {
+    max-width: 15em;
+    color: var(--bg);
+    font-size: clamp(2rem, 5.2vw, 3.5rem);
+    font-weight: 700;
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+  .lede {
+    max-width: 34em;
+    margin-top: 18px;
+    color: var(--muted);
+    font-size: 1.0625rem;
+  }
+  .cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+  .btn {
+    display: inline-block;
+    padding: 12px 22px;
+    border: 2px solid var(--bg);
+    border-radius: 999px;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .btn-primary { background: var(--bg); color: #ffffff; }
+  .btn-primary:hover { background: #0f1858; border-color: #0f1858; }
+  .btn-ghost { background: transparent; color: var(--bg); }
+  .btn-ghost:hover { background: var(--tint); }
+  .btn:focus-visible, .dept:focus-visible {
+    outline: 3px solid var(--bg);
+    outline-offset: 3px;
+  }
+
+  .hero-art {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-height: 300px;
+    padding: 36px;
+    border-radius: 44px 44px 44px 10px;
+    background: var(--bg);
+    box-sizing: border-box;
+  }
+  .hero-art svg { display: block; width: min(78%, 340px); height: auto; fill: #ffffff; }
+  .tag {
+    position: absolute;
+    top: 22px;
+    right: 22px;
+    padding: 10px 16px;
+    border-radius: 999px;
+    background: var(--sale);
+    color: var(--ink);
+    font-size: 0.9375rem;
+    font-weight: 700;
+    transform: rotate(-5deg);
+  }
+
+  .section { padding-block: 56px 0; }
+  .section h2 {
+    color: var(--bg);
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+  }
+  .section-head p { margin-top: 6px; color: var(--muted); }
+
+  .depts {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 14px;
+    margin-top: 26px;
+  }
+  .dept {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 18px;
+    border-radius: 18px;
+    background: var(--tint);
+    color: var(--ink);
+    text-decoration: none;
+    transition: transform 0.15s ease, background 0.15s ease;
+  }
+  .dept:hover { transform: translateY(-3px); background: #dde2f8; }
+  .dept strong { display: block; font-size: 1rem; font-weight: 600; }
+  .dept span { display: block; color: var(--muted); font-size: 0.8125rem; }
+
+  .glyph {
+    fill: none;
+    stroke: var(--bg);
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .ico {
+    display: grid;
+    place-items: center;
+    width: 68px;
+    height: 68px;
+    border-radius: 20px;
+    background: #ffffff;
+  }
+  .ico svg { display: block; width: 46px; height: 46px; }
+
+  .morning {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    align-items: start;
+    gap: 40px;
+  }
+  .day {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--line);
+  }
+  .day li {
+    display: flex;
+    align-items: baseline;
+    gap: 24px;
+    padding-block: 18px;
+    border-bottom: 1px solid var(--line);
+  }
+  .day time {
+    flex: none;
+    width: 4.5rem;
+    color: var(--bg);
+    font-size: 1.25rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 18px;
+    margin: 26px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .steps li { padding: 22px; border-radius: 18px; background: var(--tint); }
+  .steps .n {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    margin-bottom: 14px;
+    border-radius: 50%;
+    background: var(--bg);
+    color: #ffffff;
+    font-size: 0.9375rem;
+    font-weight: 700;
+  }
+  .steps h3 { font-size: 1.0625rem; font-weight: 600; }
+  .steps p { margin-top: 4px; color: var(--muted); font-size: 0.9375rem; }
+
+  .hours {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    align-items: center;
+    gap: 24px;
+    margin-top: 64px;
+    padding: 40px;
+    border-radius: 36px 36px 10px 36px;
+    background: var(--bg);
+    color: #ffffff;
+  }
+  .hours h2 { color: #ffffff; }
+  .hours p { color: rgba(255, 255, 255, 0.8); }
+
+
+
+  /* Discord profile */
+  .profile-doc { padding-bottom: 20px; }
+  .profile-panel {
+    max-width: 1120px;
+    margin-top: 28px;
+    padding: 26px;
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    background: #fff;
+    box-shadow: 0 12px 34px rgba(22, 32, 118, 0.07);
+  }
+  .profile-state p { color: var(--muted); }
+  .profile-button { margin-top: 20px; cursor: pointer; font: inherit; }
+  .profile-button:disabled { opacity: .6; cursor: wait; }
+  #discord-login { display: inline-flex; align-items: center; gap: 10px; }
+  #discord-login svg { width: 20px; height: 20px; }
+  .profile-user { display: flex; align-items: center; gap: 18px; min-width: 0; }
+  .profile-avatar {
+    width: 76px; height: 76px; flex: none; border-radius: 50%;
+    object-fit: cover; background: var(--tint);
+  }
+  .profile-avatar-fallback {
+    display: grid; place-items: center; color: var(--bg);
+    font-size: 1.8rem; font-weight: 700;
+  }
+  .profile-user-copy { min-width: 0; }
+  .profile-user h2 { color: var(--bg); font-size: 1.3rem; overflow-wrap: anywhere; }
+  .profile-muted { margin-top: 4px; color: var(--muted); font-size: .9rem; overflow-wrap: anywhere; }
+  .profile-id { font-size: .75rem; }
+  .profile-success { margin-top: 24px; padding: 12px 14px; border-radius: 12px; background: #e9ecfb; color: var(--bg) !important; }
+
+  .account-settings { margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--line); }
+  .account-settings h3 { margin: 0; color: var(--bg); font-size: 1.15rem; }
+  .settings-intro { margin: 6px 0 18px; color: var(--muted); font-size: .9rem; }
+  .settings-field { display: block; margin-top: 16px; color: var(--ink); font-size: .9rem; font-weight: 600; }
+  .settings-input { display: block; width: 100%; box-sizing: border-box; margin-top: 7px; padding: 12px 13px; border: 1px solid rgba(22,32,118,.22); border-radius: 10px; background: #fff; color: var(--ink); font: inherit; font-weight: 400; }
+  .settings-input:focus { outline: 3px solid rgba(22,32,118,.16); border-color: var(--bg); }
+  .settings-check { display: flex; align-items: flex-start; gap: 10px; margin-top: 14px; color: var(--muted); font-size: .9rem; font-weight: 400; }
+  .settings-check input { margin-top: 5px; accent-color: var(--bg); }
+  .settings-note { min-height: 1.3em; margin-top: 12px; color: var(--muted); font-size: .85rem; }
+  .profile-error { margin-top: 18px; color: #a32222 !important; font-size: .9rem; overflow-wrap: anywhere; }
+  .profile-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(360px, 520px);
+    align-items: start;
+    gap: 28px;
+  }
+  .profile-main {
+    min-width: 0;
+  }
+  .admin-panel {
+    min-width: 0;
+    margin-top: 0;
+    padding: 22px;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: #f9faff;
+  }
+  .admin-panel h3 { margin: 0; color: var(--bg); font-size: 1.15rem; }
+  .admin-list {
+    display: grid;
+    gap: 12px;
+    margin-top: 16px;
+  }
+  .admin-user {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 10px;
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+  }
+  .admin-user-copy { min-width: 0; }
+  .admin-user-copy strong,
+  .admin-user-copy span {
+    display: block;
+    overflow-wrap: anywhere;
+  }
+  .admin-user-copy strong { color: var(--bg); }
+  .admin-user-copy span { margin-top: 2px; color: var(--muted); font-size: .78rem; }
+  .admin-toggle,
+  .admin-ban {
+    min-height: 36px;
+    padding: 7px 10px;
+    border: 1px solid var(--bg);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--bg);
+    font: inherit;
+    font-size: .78rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .admin-toggle:disabled,
+  .admin-ban:disabled { opacity: .6; cursor: wait; }
+  .admin-message { min-height: 1.3em; margin-top: 12px; color: var(--muted); font-size: .85rem; }
+  .notice-settings { margin-bottom: 22px; }
+  .notice-settings form { display: flex; align-items: flex-end; gap: 10px; }
+  .notice-settings .settings-field { flex: 1; margin-top: 0; }
+  .notice-settings .profile-button { flex: none; margin-top: 0; }
+  @media (max-width: 480px) {
+    .profile-panel { padding: 20px; }
+    .profile-user { align-items: flex-start; gap: 13px; }
+    .profile-avatar { width: 60px; height: 60px; }
+    .admin-user { grid-template-columns: 1fr; }
+    .notice-settings form { flex-direction: column; align-items: stretch; }
+    .notice-settings .profile-button { width: 100%; }
+  }
+  .foot {
+    margin-top: 72px;
+    padding-top: 56px;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    border-radius: 36px 36px 0 0;
+    background: var(--bg);
+    color: rgba(255, 255, 255, 0.82);
+    font-size: 0.9375rem;
+  }
+  .foot-grid {
+    display: grid;
+    grid-template-columns: 1.6fr repeat(3, 1fr);
+    gap: 40px;
+  }
+  .foot-brand { min-width: 0; }
+  .foot-logo { display: flex; align-items: center; gap: 14px; }
+  .foot-logo svg { display: block; flex: none; width: 64px; height: auto; fill: #ffffff; }
+  .foot-logo strong { display: block; color: #ffffff; font-size: 1.5rem; font-weight: 700; line-height: 1.1; }
+  .foot-logo span {
+    display: block;
+    margin-top: 4px;
+    color: rgba(255, 255, 255, 0.64);
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+  }
+  .foot-brand p { max-width: 30em; margin-top: 18px; color: rgba(255, 255, 255, 0.7); }
+
+  .foot-col {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    min-width: 0;
+  }
+  .foot-col h3 {
+    position: relative;
+    margin: 0 0 6px;
+    padding-bottom: 10px;
+    color: var(--sale);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+  .foot-col h3::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 28px;
+    height: 2px;
+    background: var(--sale);
+  }
+  .foot-col a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: rgba(255, 255, 255, 0.86);
+    font-size: 1rem;
+    text-decoration: none;
+  }
+  .foot-col a:hover { color: #ffffff; text-decoration: underline; text-underline-offset: 4px; }
+  .foot-col a svg { flex: none; opacity: 0.7; }
+
+  .foot-bottom {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    margin-top: 48px;
+    padding-block: 28px;
+    border-top: 1px solid rgba(255, 255, 255, 0.14);
+  }
+  .foot-bottom p { margin: 0; }
+  .foot-bottom .fine { margin-top: 4px; color: rgba(255, 255, 255, 0.56); font-size: 0.8125rem; }
+  .foot-icons { display: flex; gap: 12px; }
+  .foot-icons a,
+  .foot-icons button {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.06);
+    color: #ffffff;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .foot-icons a:hover,
+  .foot-icons button:hover { background: rgba(255, 255, 255, 0.16); }
+  .foot-icons svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .foot a:focus-visible,
+  .foot button:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 3px;
+  }
+
+  .legal { padding-block: 40px 0; }
+  .legal .doc { max-width: 760px; }
+  .legal .back {
+    display: inline-block;
+    margin-bottom: 28px;
+    color: var(--bg);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .legal .back:hover { text-decoration: underline; text-underline-offset: 4px; }
+  .legal h1 {
+    color: var(--bg);
+    font-size: clamp(2rem, 4.5vw, 2.75rem);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+  .legal .updated { margin-top: 10px; color: var(--muted); font-size: 0.9375rem; }
+  .legal h2 {
+    margin-top: 36px;
+    color: var(--bg);
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+  .legal p, .legal li { margin-top: 10px; font-size: 1rem; line-height: 1.7; }
+  .legal ul { margin: 10px 0 0; padding-left: 1.25rem; }
+  .legal li { margin-top: 6px; }
+  .legal .back:focus-visible { outline: 3px solid var(--bg); outline-offset: 3px; }
+
+  @media (max-width: 820px) {
+    .hero { grid-template-columns: 1fr; padding-block: 36px 32px; }
+    .hero-art { min-height: 240px; }
+    .hours { grid-template-columns: 1fr; padding: 28px; }
+    .morning { grid-template-columns: 1fr; gap: 24px; }
+    .profile-layout { grid-template-columns: 1fr; }
+    .admin-panel { margin-top: 8px; }
+    .foot-grid { grid-template-columns: 1fr 1fr; gap: 32px; }
+    .foot-brand { grid-column: 1 / -1; }
+  }
+
+  @media (max-width: 480px) {
+    .nav { gap: 18px; }
+    .nav a { font-size: 0.875rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pop, .idle, .spin { animation: none; }
+    .cart-mark, .veil, .bar, .notice { animation: none; }
+    .site { animation: none; opacity: 1; pointer-events: auto; }
+  }
+
+  .bar, .notice { animation: none; }
+
+  footer.foot {
+    margin-top: 72px;
+    padding-top: 56px;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    border-radius: 36px 36px 0 0;
+    background: var(--bg);
+  }
+  footer.foot .foot-grid {
+    width: 100%;
+  }
+  footer.foot .foot-brand,
+  footer.foot .foot-col,
+  footer.foot .foot-bottom {
+    position: relative;
+  }
+  footer.foot .foot-bottom p {
+    color: rgba(255, 255, 255, 0.82);
+  }
+  footer.foot .foot-bottom .fine {
+    color: rgba(255, 255, 255, 0.56);
+  }
+  /* Applications admin */
+  .apps-panel { margin-top: 28px; }
+  .apps-panel h4 { margin: 26px 0 0; color: var(--bg); font-size: 1rem; }
+  .opening-form { margin-bottom: 4px; }
+  .apps-filter { max-width: 240px; }
+  textarea.settings-input { resize: vertical; }
+  .app-item { border: 1px solid var(--line); border-radius: 12px; background: #fff; }
+  .app-item > summary {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;
+    padding: 14px; cursor: pointer; list-style: none;
+  }
+  .app-item > summary::-webkit-details-marker { display: none; }
+  .app-item > summary:focus-visible { outline: 3px solid rgba(22, 32, 118, .3); outline-offset: 2px; border-radius: 12px; }
+  .app-item .app-who { flex: 1 1 220px; min-width: 0; overflow-wrap: anywhere; color: var(--bg); font-weight: 600; }
+  .app-item .app-who small { display: block; color: var(--muted); font-weight: 400; font-size: .78rem; }
+  .app-badge { padding: 4px 12px; border-radius: 999px; font-size: .78rem; font-weight: 600; background: var(--tint); color: var(--bg); }
+  .app-accepted { background: #dff5e6; color: #145c2e; }
+  .app-rejected { background: #fde7e7; color: #8a1c1c; }
+  .app-body { padding: 0 14px 14px; border-top: 1px solid var(--line); }
+  .app-field { margin-top: 12px; }
+  .app-field strong { display: block; color: var(--bg); font-size: .8rem; }
+  .app-field p { margin: 2px 0 0; color: var(--ink); font-size: .9rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .app-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  .app-actions button:disabled { opacity: .6; cursor: wait; }
+  .app-danger { border-color: #8a1c1c; color: #8a1c1c; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs><symbol id="mark" viewBox="0 0 220 153">
+        <path transform="translate(16 0)" d="M24.0365 14.1634C19.2478 7.68401 17.9264 0.162442 8.60731 0C5.6445 0.910662 2.17423 2.14198 0.826323 5.08493C-2.70351 12.7922 5.95025 23.5928 10.3119 29.0336C21.3048 42.7456 35.2834 53.881 51.5352 60.9891C76.3172 72.0837 106.858 72.3256 132.23 62.6845C152.659 54.7171 170.059 40.733 182.029 22.6632C182.43 22.019 182.847 21.3728 183.268 20.7216C185.953 16.567 188.756 12.2303 187.813 7.22694C186.447 -0.0274197 174.812 -2.49711 171.175 3.20384C166.405 10.6818 163.214 16.1929 156.67 22.9016C130.389 50.2594 88.8001 57.2726 54.6954 40.0973C42.5872 33.9793 32.0271 24.9739 24.0365 14.1634Z"/>
+        <path transform="translate(47 78)" d="M124.38 6.31131C122.708 2.3735 119.368 0.295426 115.188 0C109.8 1.44975 105.284 4.90263 100.118 6.96341C82.7647 13.9859 63.8401 15.94 45.4603 12.6075C39.5675 11.5295 33.7926 9.86578 28.2174 7.63856C23.8045 5.92364 17.6005 2.43113 13.4354 1.17233C-0.560516 -3.05659 -5.59303 14.4218 7.96459 21.3607C8.49388 21.6331 9.02812 21.8947 9.56799 22.1447C39.2669 36.4491 72.0434 39.1612 103.213 27.6122C103.531 27.4948 103.863 27.3723 104.207 27.2455C112.903 24.047 129.475 17.9511 124.38 6.31131Z"/>
+        <path transform="translate(62 121)" d="M31.2083 13.7045C30.1244 5.11767 22.2825 -0.962875 13.6958 0.126196C5.11639 1.2138 -0.958167 9.04854 0.125037 17.6288C1.20824 26.2091 9.03918 32.2882 17.62 31.2093C26.2075 30.1305 32.2923 22.2914 31.2083 13.7045Z"/>
+        <path transform="translate(126 121)" d="M31.1452 13.2605C29.8092 4.67042 21.7343 -1.18923 13.1538 0.205261C4.65602 1.58586 -1.13403 9.5658 0.188011 18.0732C1.51079 26.58 9.45035 32.4257 17.9665 31.1615C26.5652 29.8855 32.4804 21.8507 31.1452 13.2605Z"/>
+      </symbol></defs></svg>
+<header class="bar">
+    <div class="bar-inner">
+      <a class="logo" href="index.html" aria-label="Northco home">
+        <svg viewBox="0 0 220 153" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <g fill="#ffffff">
+            <path transform="translate(16 0)" d="M24.0365 14.1634C19.2478 7.68401 17.9264 0.162442 8.60731 0C5.6445 0.910662 2.17423 2.14198 0.826323 5.08493C-2.70351 12.7922 5.95025 23.5928 10.3119 29.0336C21.3048 42.7456 35.2834 53.881 51.5352 60.9891C76.3172 72.0837 106.858 72.3256 132.23 62.6845C152.659 54.7171 170.059 40.733 182.029 22.6632C182.43 22.019 182.847 21.3728 183.268 20.7216C185.953 16.567 188.756 12.2303 187.813 7.22694C186.447 -0.0274197 174.812 -2.49711 171.175 3.20384C166.405 10.6818 163.214 16.1929 156.67 22.9016C130.389 50.2594 88.8001 57.2726 54.6954 40.0973C42.5872 33.9793 32.0271 24.9739 24.0365 14.1634Z"/>
+            <path transform="translate(47 78)" d="M124.38 6.31131C122.708 2.3735 119.368 0.295426 115.188 0C109.8 1.44975 105.284 4.90263 100.118 6.96341C82.7647 13.9859 63.8401 15.94 45.4603 12.6075C39.5675 11.5295 33.7926 9.86578 28.2174 7.63856C23.8045 5.92364 17.6005 2.43113 13.4354 1.17233C-0.560516 -3.05659 -5.59303 14.4218 7.96459 21.3607C8.49388 21.6331 9.02812 21.8947 9.56799 22.1447C39.2669 36.4491 72.0434 39.1612 103.213 27.6122C103.531 27.4948 103.863 27.3723 104.207 27.2455C112.903 24.047 129.475 17.9511 124.38 6.31131Z"/>
+            <path transform="translate(62 121)" d="M31.2083 13.7045C30.1244 5.11767 22.2825 -0.962875 13.6958 0.126196C5.11639 1.2138 -0.958167 9.04854 0.125037 17.6288C1.20824 26.2091 9.03918 32.2882 17.62 31.2093C26.2075 30.1305 32.2923 22.2914 31.2083 13.7045Z"/>
+            <path transform="translate(126 121)" d="M31.1452 13.2605C29.8092 4.67042 21.7343 -1.18923 13.1538 0.205261C4.65602 1.58586 -1.13403 9.5658 0.188011 18.0732C1.51079 26.58 9.45035 32.4257 17.9665 31.1615C26.5652 29.8855 32.4804 21.8507 31.1452 13.2605Z"/>
+          </g>
+        </svg>
+      </a>
+      <nav class="nav" aria-label="Main">
+        <a href="index.html">Home</a>
+        <a href="employment.html">Employment</a>
+        <a href="profile.html" aria-current="page">Profile</a>
+        <a href="admin.html">Admin</a>
+      </nav>
+    </div>
+  </header>
+<p class="notice" role="status">This site is currently available only for beta-testers.</p>
+<main class="home">
+<section class="wrap legal">
+      <div class="doc profile-doc">
+        <a class="back" href="index.html">← Back to home</a>
+        <h1>Your profile</h1>
+        <p class="updated">Sign in with Discord to view your Northco account.</p>
+
+        <div class="profile-panel" aria-live="polite">
+          <div id="profile-loading" class="profile-state">Checking your sign-in status…</div>
+          <div id="profile-signed-out" class="profile-state" hidden>
+            <p>Sign in to see your Discord account details on Northco.</p>
+            <button id="discord-login" class="btn btn-primary profile-button" type="button">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19.7 5.1A18.8 18.8 0 0 0 15.1 3.7l-.6 1.2a17.2 17.2 0 0 0-5 0l-.6-1.2a18.8 18.8 0 0 0-4.6 1.4C1.4 9.4.6 13.6 1 17.8a18.7 18.7 0 0 0 5.7 2.9l1.2-1.9-1.9-.9.5-.4c3.7 1.7 7.7 1.7 11.4 0l.5.4-1.9.9 1.2 1.9a18.7 18.7 0 0 0 5.7-2.9c.5-4.8-.8-8.9-3.7-12.7ZM8.8 15.2c-1.1 0-2-.9-2-2.1s.9-2.1 2-2.1 2 .9 2 2.1-.9 2.1-2 2.1Zm6.4 0c-1.1 0-2-.9-2-2.1s.9-2.1 2-2.1 2 .9 2 2.1-.9 2.1-2 2.1Z"/></svg>
+              Continue with Discord
+            </button>
+          </div>
+          <div id="profile-signed-in" class="profile-state" hidden>
+            <div class="profile-layout">
+            <div class="profile-main">
+            <div class="profile-user">
+              <img id="profile-avatar" class="profile-avatar" alt="Discord avatar" hidden>
+              <div id="profile-avatar-fallback" class="profile-avatar profile-avatar-fallback" aria-hidden="true">N</div>
+              <div class="profile-user-copy">
+                <h2 id="profile-name">Discord user</h2>
+                <p id="profile-email" class="profile-muted"></p>
+                <p id="profile-id" class="profile-muted profile-id"></p>
+              </div>
+            </div>
+            <p class="profile-success">You're signed in to Northco with Discord.</p>
+            <section class="account-settings" aria-labelledby="account-settings-title">
+              <h3 id="account-settings-title">Account Settings</h3>
+              <p class="settings-intro">Personalise how your account appears on this page.</p>
+              <form id="account-settings-form">
+                <label class="settings-field" for="settings-display-name">Display name
+                  <input class="settings-input" id="settings-display-name" name="displayName" type="text" maxlength="40" autocomplete="nickname" placeholder="Your Northco display name">
+                </label>
+                <label class="settings-check"><input id="settings-show-email" type="checkbox"> <span>Show my email address on my profile</span></label>
+                <label class="settings-check"><input id="settings-show-id" type="checkbox"> <span>Show my Discord account ID on my profile</span></label>
+                <button id="settings-save" class="btn btn-primary profile-button" type="submit">Save settings</button>
+                <p id="settings-message" class="settings-note" role="status" aria-live="polite"></p>
+              </form>
+            </section>
+            <button id="discord-logout" class="btn btn-ghost profile-button" type="button">Log out</button>
+            </div>
+            <section id="admin-panel" class="admin-panel" aria-labelledby="admin-panel-title" hidden>
+              <h3 id="admin-panel-title">Admin Panel</h3>
+              <p class="settings-intro">Manage Northco profiles and account roles.</p>
+              <div class="notice-settings">
+                <form id="notice-settings-form">
+                  <label class="settings-field" for="notice-setting-input">Navbar notice text
+                    <input class="settings-input" id="notice-setting-input" name="notice" type="text" maxlength="240">
+                  </label>
+                  <button id="notice-setting-save" class="btn btn-primary profile-button" type="submit">Save text</button>
+                </form>
+              </div>
+              <div id="admin-list" class="admin-list"></div>
+              <p id="admin-message" class="admin-message" role="status" aria-live="polite"></p>
+            </section>
+            </div>
+            <section id="applications-panel" class="admin-panel apps-panel" aria-labelledby="applications-title" hidden>
+              <h3 id="applications-title">Applications</h3>
+              <p class="settings-intro">Open roles and staff applications. Applicants only see their own status.</p>
+
+              <h4>Open roles</h4>
+              <form id="opening-form" class="opening-form">
+                <label class="settings-field" for="opening-title">Role title
+                  <input class="settings-input" id="opening-title" type="text" minlength="2" maxlength="80" required>
+                </label>
+                <label class="settings-field" for="opening-desc">Description (optional)
+                  <textarea class="settings-input" id="opening-desc" rows="2" maxlength="1000"></textarea>
+                </label>
+                <button id="opening-add" class="btn btn-primary profile-button" type="submit">Add role</button>
+              </form>
+              <div id="openings-list" class="admin-list"></div>
+
+              <h4>Applications</h4>
+              <label class="settings-field apps-filter" for="apps-filter">Show
+                <select class="settings-input" id="apps-filter">
+                  <option value="pending">Pending</option>
+                  <option value="accepted">Accepted</option>
+                  <option value="rejected">Not accepted</option>
+                  <option value="all">All</option>
+                </select>
+              </label>
+              <p id="apps-count" class="settings-intro"></p>
+              <div id="apps-list" class="admin-list"></div>
+              <p id="apps-message" class="admin-message" role="status" aria-live="polite"></p>
+            </section>
+          </div>
+          <p id="profile-error" class="profile-error" role="alert" hidden></p>
+        </div>
+      </div>
+    </section>
+  </main>
+<footer class="foot">
+      <div class="wrap">
+        <div class="foot-grid">
+          <div class="foot-brand">
+            <div class="foot-logo">
+              <svg viewBox="0 0 220 153" aria-hidden="true"><use href="#mark"/></svg>
+              <div><strong>Northco</strong><span>YOUR STORE ON ROBLOX</span></div>
+            </div>
+            <p>A virtual store within Roblox. Browse our departments, meet the team and join the community.</p>
+          </div>
+
+          <nav class="foot-col" aria-label="Company">
+            <h3>Company</h3>
+            <a href="index.html">About</a>
+            <a href="index.html#departments">Departments</a>
+            <a href="employment.html">Employment</a>
+          </nav>
+
+          <nav class="foot-col" aria-label="Visit">
+            <h3>Visit</h3>
+            <a href="privacy.html#contact">Contact</a>
+            <a href="https://www.roblox.com/communities/" target="_blank" rel="noopener noreferrer">Roblox Group <svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"><path d="M3 9l6-6M4 3h5v5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+            <a href="https://discord.com/" target="_blank" rel="noopener noreferrer">Discord <svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"><path d="M3 9l6-6M4 3h5v5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+          </nav>
+
+          <nav class="foot-col" aria-label="Legal">
+            <h3>Legal</h3>
+            <a href="privacy.html">Privacy Policy</a>
+            <a href="terms.html">Terms of Service</a>
+          </nav>
+        </div>
+
+        <div class="foot-bottom">
+          <div>
+            <p>© 2026 Northco. All rights reserved.</p>
+            <p class="fine">A virtual store within Roblox. Not affiliated with Roblox Corporation.</p>
+          </div>
+          <div class="foot-icons">
+            <a href="https://discord.com/" target="_blank" rel="noopener noreferrer" aria-label="Discord"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H11l-5 4v-4H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z"/></svg></a>
+            <a href="https://www.roblox.com/communities/" target="_blank" rel="noopener noreferrer" aria-label="Roblox group"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 8h10a4 4 0 0 1 4 4v1a3 3 0 0 1-5.2 2L14.6 14H9.4l-1.2 1A3 3 0 0 1 3 13v-1a4 4 0 0 1 4-4Z"/><path d="M8 11v3M6.5 12.5h3"/></svg></a>
+            <button class="to-top" type="button" aria-label="Back to top"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js" integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
+<script src="notice-sync.js"></script>
+<script>
+  // Northco Supabase project: the publishable key is designed for browser use.
+  // Access is enforced by the row-level security policies in supabase_profiles.sql, not by this script.
+  const SUPABASE_URL = "https://vanjowcvzvqkzbdxwunb.supabase.co";
+  const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_GYpISpry5P7Ntnru55ZS3A_a7b3N4hq";
+  const NOTICE_CACHE_KEY = "northco-notice";
+
+  const loadingEl = document.getElementById("profile-loading");
+  const signedOutEl = document.getElementById("profile-signed-out");
+  const signedInEl = document.getElementById("profile-signed-in");
+  const errorEl = document.getElementById("profile-error");
+  const loginButton = document.getElementById("discord-login");
+  const logoutButton = document.getElementById("discord-logout");
+  const settingsForm = document.getElementById("account-settings-form");
+  const settingsName = document.getElementById("settings-display-name");
+  const settingsShowEmail = document.getElementById("settings-show-email");
+  const settingsShowId = document.getElementById("settings-show-id");
+  const settingsSave = document.getElementById("settings-save");
+  const settingsMessage = document.getElementById("settings-message");
+  const adminPanel = document.getElementById("admin-panel");
+  const adminList = document.getElementById("admin-list");
+  const adminMessage = document.getElementById("admin-message");
+  const noticeSettingsForm = document.getElementById("notice-settings-form");
+  const noticeSettingInput = document.getElementById("notice-setting-input");
+  const noticeSettingSave = document.getElementById("notice-setting-save");
+  const appsPanel = document.getElementById("applications-panel");
+  const openingForm = document.getElementById("opening-form");
+  const openingTitle = document.getElementById("opening-title");
+  const openingDesc = document.getElementById("opening-desc");
+  const openingAdd = document.getElementById("opening-add");
+  const openingsList = document.getElementById("openings-list");
+  const appsFilter = document.getElementById("apps-filter");
+  const appsCount = document.getElementById("apps-count");
+  const appsList = document.getElementById("apps-list");
+  const appsMessage = document.getElementById("apps-message");
+
+  let supabaseClient = null;
+  let currentUser = null;
+  let currentProfile = null;
+  let shownUserId;      // undefined until the first session has been handled
+  let loadSeq = 0;      // lets a newer load cancel an older one still in flight
+  let formTouched = false;
+  let pendingError = "";
+
+  function showError(message) {
+    errorEl.textContent = message;
+    errorEl.hidden = false;
+  }
+
+  function clearError() {
+    errorEl.textContent = "";
+    errorEl.hidden = true;
+  }
+
+  function metaOf(user) {
+    return (user && user.user_metadata) || {};
+  }
+
+  // Draws the signed-in card. The profiles row is the source of truth; Discord's metadata is the fallback.
+  function applyProfile(user, profile, fillForm) {
+    const meta = metaOf(user);
+    const name = (profile && profile.display_name) || meta.northco_display_name || meta.full_name || meta.name || meta.user_name || "Discord user";
+    const showEmail = profile ? profile.show_email === true : meta.northco_show_email === true;
+    const showId = profile ? profile.show_discord_id === true : meta.northco_show_discord_id === true;
+    const avatarUrl = (profile && profile.avatar_url) || meta.avatar_url || meta.picture || "";
+
+    if (fillForm) {
+      settingsName.value = (profile && profile.display_name) || meta.northco_display_name || "";
+      settingsShowEmail.checked = showEmail;
+      settingsShowId.checked = showId;
+    }
+
+    document.getElementById("profile-name").textContent = name;
+    document.getElementById("profile-email").textContent = showEmail ? (user.email || "") : "";
+    document.getElementById("profile-id").textContent = showId
+      ? "Discord account ID: " + (meta.provider_id || meta.sub || user.id)
+      : "";
+
+    const avatar = document.getElementById("profile-avatar");
+    const fallback = document.getElementById("profile-avatar-fallback");
+    if (avatarUrl) {
+      avatar.src = avatarUrl;
+      avatar.alt = name + "'s Discord avatar";
+      avatar.hidden = false;
+      fallback.hidden = true;
+      avatar.onerror = function () {
+        avatar.hidden = true;
+        fallback.hidden = false;
+      };
+    } else {
+      avatar.removeAttribute("src");
+      avatar.hidden = true;
+      fallback.hidden = false;
+    }
+    fallback.textContent = (name.trim()[0] || "N").toUpperCase();
+  }
+
+  function renderUser(user) {
+    loadSeq++;                       // cancels any load that belongs to the previous state
+    loadingEl.hidden = true;
+    adminPanel.hidden = true;
+    adminList.replaceChildren();
+    adminMessage.textContent = "";
+    appsPanel.hidden = true;
+    openingsList.replaceChildren();
+    appsList.replaceChildren();
+    appsMessage.textContent = "";
+    appsCount.textContent = "";
+    adminOpenings = [];
+    adminApps = [];
+    openAppIds.clear();
+    settingsMessage.textContent = "";
+    formTouched = false;
+
+    if (!user) {
+      currentUser = null;
+      currentProfile = null;
+      signedInEl.hidden = true;
+      signedOutEl.hidden = false;
+      loginButton.disabled = !supabaseClient;
+      if (pendingError) {
+        showError(pendingError);
+        pendingError = "";
+      } else {
+        clearError();
+      }
+      return;
+    }
+
+    clearError();
+    signedOutEl.hidden = true;
+    signedInEl.hidden = false;
+    currentUser = user;
+    currentProfile = null;
+    applyProfile(user, null, true);
+    loadProfile(user).catch(function (err) {
+      settingsMessage.textContent = "Couldn't load your saved settings: " + (err && err.message ? err.message : err);
+    });
+  }
+
+  // One entry point for every auth event, so the same user is never rendered (or loaded) twice.
+  function handleSession(session) {
+    const user = session ? session.user : null;
+    const id = user ? user.id : null;
+    if (id === shownUserId) {
+      loadingEl.hidden = true;
+      return;
+    }
+    shownUserId = id;
+    renderUser(user);
+  }
+
+  async function loadProfile(user) {
+    const seq = loadSeq;
+    const { data: profile, error } = await supabaseClient
+      .from("profiles")
+      .select("display_name, avatar_url, show_email, show_discord_id, is_admin, banned")
+      .eq("id", user.id)
+      .maybeSingle();
+    if (seq !== loadSeq) return;
+
+    if (error) {
+      settingsMessage.textContent = "Couldn't load your saved settings: " + error.message;
+      return;
+    }
+
+    if (profile && profile.banned === true) {
+      // The ban itself is enforced by the database; this just ends the session and says why.
+      pendingError = "This account has been banned.";
+      await supabaseClient.auth.signOut();
+      handleSession(null);
+      return;
+    }
+
+    currentProfile = profile;
+    applyProfile(user, profile, !formTouched);
+    if (profile && profile.is_admin === true) {
+      await Promise.all([loadAdminPanel(user, seq), loadApplicationsAdmin(user, seq)]);
+    }
+  }
+
+  async function loadAdminPanel(user, seq) {
+    adminPanel.hidden = false;
+    adminMessage.textContent = "Loading profiles…";
+    const results = await Promise.all([
+      supabaseClient.from("site_settings").select("value").eq("key", "navbar_notice").maybeSingle(),
+      supabaseClient.from("profiles").select("id, display_name, is_admin, banned").order("display_name", { ascending: true })
+    ]);
+    if (seq !== loadSeq) return;
+
+    const noticeRes = results[0];
+    const listRes = results[1];
+    if (!noticeRes.error && noticeRes.data) noticeSettingInput.value = noticeRes.data.value || "";
+    if (listRes.error) {
+      adminMessage.textContent = "Couldn't load profiles: " + listRes.error.message;
+      return;
+    }
+
+    adminMessage.textContent = "";
+    adminList.replaceChildren();
+    listRes.data.forEach(function (item) {
+      const isSelf = item.id === user.id;
+      const label = item.display_name || "Discord user";
+      const row = document.createElement("div");
+      row.className = "admin-user";
+
+      const copy = document.createElement("div");
+      copy.className = "admin-user-copy";
+      const name = document.createElement("strong");
+      name.textContent = label + (isSelf ? " (you)" : "");
+      const id = document.createElement("span");
+      id.textContent = item.id;
+      copy.append(name, id);
+
+      const roleButton = document.createElement("button");
+      roleButton.type = "button";
+      roleButton.className = "admin-toggle";
+      roleButton.textContent = item.is_admin ? "Remove admin" : "Make admin";
+
+      const banButton = document.createElement("button");
+      banButton.type = "button";
+      banButton.className = "admin-ban";
+      banButton.textContent = item.banned ? "Unban" : "Ban";
+
+      if (isSelf) {
+        // Stops an admin from locking themselves out by accident.
+        roleButton.disabled = true;
+        banButton.disabled = true;
+        roleButton.title = banButton.title = "You can't change your own role or status here.";
+      }
+
+      async function change(patch, confirmText, doneText) {
+        if (confirmText && !window.confirm(confirmText)) return;
+        roleButton.disabled = true;
+        banButton.disabled = true;
+        const { error: updateError } = await supabaseClient.from("profiles").update(patch).eq("id", item.id);
+        roleButton.disabled = isSelf;
+        banButton.disabled = isSelf;
+        if (updateError) {
+          adminMessage.textContent = "Couldn't update " + label + ": " + updateError.message;
+          return;
+        }
+        Object.assign(item, patch);
+        roleButton.textContent = item.is_admin ? "Remove admin" : "Make admin";
+        banButton.textContent = item.banned ? "Unban" : "Ban";
+        adminMessage.textContent = doneText;
+      }
+
+      roleButton.addEventListener("click", function () {
+        change({ is_admin: !item.is_admin },
+          item.is_admin ? "" : "Make " + label + " an admin? Admins can ban users and edit the navbar text.",
+          "Role updated.");
+      });
+      banButton.addEventListener("click", function () {
+        change({ banned: !item.banned },
+          item.banned ? "" : "Ban " + label + "?",
+          "Profile status updated.");
+      });
+
+      row.append(copy, roleButton, banButton);
+      adminList.append(row);
+    });
+  }
+
+  // ---- Applications admin (rules are enforced by supabase_applications.sql, this only draws and sends)
+  const STATUS_LABEL = { pending: "Pending", accepted: "Accepted", rejected: "Not accepted" };
+  let adminOpenings = [];
+  let adminApps = [];
+  const openAppIds = new Set();
+
+  function textEl(tag, className, text) {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text != null) node.textContent = text;
+    return node;
+  }
+
+  async function loadApplicationsAdmin(user, seq) {
+    appsPanel.hidden = false;
+    appsMessage.textContent = "Loading applications…";
+    const results = await Promise.all([
+      supabaseClient.from("job_openings").select("id, title, description, is_open, created_at").order("created_at", { ascending: true }),
+      supabaseClient.from("applications")
+        .select("id, role_title, discord_name, roblox_username, timezone, experience, motivation, status, admin_note, created_at")
+        .order("created_at", { ascending: false })
+        .limit(300)
+    ]);
+    if (seq !== loadSeq) return;
+
+    if (results[0].error || results[1].error) {
+      const failed = results[0].error || results[1].error;
+      appsMessage.textContent = "Couldn't load applications: " + failed.message + " (has supabase_applications.sql been run?)";
+      return;
+    }
+    appsMessage.textContent = "";
+    adminOpenings = results[0].data || [];
+    adminApps = results[1].data || [];
+    renderOpenings();
+    renderApplications();
+  }
+
+  function refreshApplicationsAdmin() {
+    if (currentUser) return loadApplicationsAdmin(currentUser, loadSeq);
+  }
+
+  function renderOpenings() {
+    openingsList.replaceChildren();
+    if (!adminOpenings.length) {
+      openingsList.append(textEl("p", "settings-intro", "No roles yet. Add one above so people can apply."));
+      return;
+    }
+    adminOpenings.forEach(function (item) {
+      const row = textEl("div", "admin-user");
+      const copy = textEl("div", "admin-user-copy");
+      copy.append(textEl("strong", null, item.title), textEl("span", null, item.is_open ? "Open for applications" : "Closed"));
+
+      const toggle = textEl("button", "admin-toggle", item.is_open ? "Close" : "Reopen");
+      toggle.type = "button";
+      const remove = textEl("button", "admin-ban", "Delete");
+      remove.type = "button";
+
+      toggle.addEventListener("click", async function () {
+        toggle.disabled = remove.disabled = true;
+        const { error } = await supabaseClient.from("job_openings").update({ is_open: !item.is_open }).eq("id", item.id);
+        if (error) {
+          appsMessage.textContent = "Couldn't update the role: " + error.message;
+          toggle.disabled = remove.disabled = false;
+          return;
+        }
+        item.is_open = !item.is_open;
+        renderOpenings();
+        appsMessage.textContent = item.is_open ? "Role reopened." : "Role closed.";
+      });
+
+      remove.addEventListener("click", async function () {
+        if (!window.confirm("Delete the role \"" + item.title + "\"? Existing applications for it are kept.")) return;
+        toggle.disabled = remove.disabled = true;
+        const { error } = await supabaseClient.from("job_openings").delete().eq("id", item.id);
+        if (error) {
+          appsMessage.textContent = "Couldn't delete the role: " + error.message;
+          toggle.disabled = remove.disabled = false;
+          return;
+        }
+        adminOpenings = adminOpenings.filter(function (o) { return o.id !== item.id; });
+        renderOpenings();
+        appsMessage.textContent = "Role deleted.";
+      });
+
+      row.append(copy, toggle, remove);
+      openingsList.append(row);
+    });
+  }
+
+  function appField(label, value) {
+    const wrap = textEl("div", "app-field");
+    wrap.append(textEl("strong", null, label), textEl("p", null, value || "—"));
+    return wrap;
+  }
+
+  function buildAppItem(app) {
+    const details = document.createElement("details");
+    details.className = "app-item";
+    details.open = openAppIds.has(app.id);
+    details.addEventListener("toggle", function () {
+      if (details.open) openAppIds.add(app.id); else openAppIds.delete(app.id);
+    });
+
+    const summary = document.createElement("summary");
+    const who = textEl("span", "app-who", (app.discord_name || "Discord user") + " · " + app.role_title);
+    who.append(textEl("small", null, "Roblox: " + app.roblox_username + " · " + new Date(app.created_at).toLocaleDateString()));
+    summary.append(who, textEl("span", "app-badge app-" + app.status, STATUS_LABEL[app.status] || app.status));
+
+    const body = textEl("div", "app-body");
+    body.append(
+      appField("Roblox username", app.roblox_username),
+      appField("Time zone and availability", app.timezone),
+      appField("Experience", app.experience),
+      appField("Why they want to join", app.motivation)
+    );
+
+    const noteLabel = textEl("label", "settings-field", "Private note (only admins see it)");
+    const note = document.createElement("textarea");
+    note.className = "settings-input";
+    note.rows = 2;
+    note.maxLength = 1000;
+    note.value = app.admin_note || "";
+    noteLabel.append(note);
+    body.append(noteLabel);
+
+    const actions = textEl("div", "app-actions");
+    const buttons = [];
+    function addButton(label, className, handler) {
+      const b = textEl("button", className, label);
+      b.type = "button";
+      b.addEventListener("click", handler);
+      buttons.push(b);
+      actions.append(b);
+    }
+    async function review(status) {
+      buttons.forEach(function (b) { b.disabled = true; });
+      const patch = { status: status, admin_note: note.value.trim() || null };
+      const { error } = await supabaseClient.from("applications").update(patch).eq("id", app.id);
+      if (error) {
+        appsMessage.textContent = "Couldn't update the application: " + error.message;
+        buttons.forEach(function (b) { b.disabled = false; });
+        return;
+      }
+      Object.assign(app, patch);
+      renderApplications();
+      appsMessage.textContent = "Application updated.";
+    }
+    if (app.status !== "accepted") addButton("Accept", "admin-toggle", function () { review("accepted"); });
+    if (app.status !== "rejected") addButton("Not accepted", "admin-toggle", function () { review("rejected"); });
+    if (app.status !== "pending") addButton("Back to pending", "admin-toggle", function () { review("pending"); });
+    addButton("Save note", "admin-toggle", function () { review(app.status); });
+    addButton("Delete", "admin-ban app-danger", async function () {
+      if (!window.confirm("Delete this application permanently?")) return;
+      buttons.forEach(function (b) { b.disabled = true; });
+      const { error } = await supabaseClient.from("applications").delete().eq("id", app.id);
+      if (error) {
+        appsMessage.textContent = "Couldn't delete the application: " + error.message;
+        buttons.forEach(function (b) { b.disabled = false; });
+        return;
+      }
+      adminApps = adminApps.filter(function (a) { return a.id !== app.id; });
+      renderApplications();
+      appsMessage.textContent = "Application deleted.";
+    });
+    body.append(actions);
+
+    details.append(summary, body);
+    return details;
+  }
+
+  function renderApplications() {
+    const filter = appsFilter.value;
+    const shown = adminApps.filter(function (a) { return filter === "all" || a.status === filter; });
+    const pending = adminApps.filter(function (a) { return a.status === "pending"; }).length;
+    appsCount.textContent = pending + " pending · " + adminApps.length + " in total";
+    appsList.replaceChildren();
+    if (!shown.length) {
+      appsList.append(textEl("p", "settings-intro", "No applications here."));
+      return;
+    }
+    shown.forEach(function (app) { appsList.append(buildAppItem(app)); });
+  }
+
+  appsFilter.addEventListener("change", renderApplications);
+
+  openingForm.addEventListener("submit", async function (event) {
+    event.preventDefault();
+    const title = openingTitle.value.trim();
+    if (title.length < 2) {
+      appsMessage.textContent = "The role title needs at least 2 characters.";
+      return;
+    }
+    openingAdd.disabled = true;
+    appsMessage.textContent = "Adding role…";
+    const { error } = await supabaseClient.from("job_openings").insert({ title: title, description: openingDesc.value.trim() });
+    openingAdd.disabled = false;
+    if (error) {
+      appsMessage.textContent = "Couldn't add the role: " + error.message;
+      return;
+    }
+    openingForm.reset();
+    await refreshApplicationsAdmin();
+    appsMessage.textContent = "Role added. It is now visible on the Employment page.";
+  });
+
+  noticeSettingsForm.addEventListener("submit", async function (event) {
+    event.preventDefault();
+    const value = noticeSettingInput.value.trim();
+    if (!value) {
+      adminMessage.textContent = "The navbar text cannot be empty.";
+      return;
+    }
+
+    noticeSettingSave.disabled = true;
+    adminMessage.textContent = "Saving navbar text…";
+    const { error } = await supabaseClient
+      .from("site_settings")
+      .upsert({ key: "navbar_notice", value, updated_at: new Date().toISOString() }, { onConflict: "key" });
+    noticeSettingSave.disabled = false;
+
+    if (error) {
+      adminMessage.textContent = "Couldn't save the navbar text: " + error.message;
+      return;
+    }
+
+    document.querySelector(".notice").textContent = value;
+    try { sessionStorage.setItem(NOTICE_CACHE_KEY, value); } catch (e) {}
+    adminMessage.textContent = "Navbar text updated.";
+  });
+
+  settingsForm.addEventListener("input", function () {
+    formTouched = true;
+  });
+
+  settingsForm.addEventListener("submit", async function (event) {
+    event.preventDefault();
+    if (!currentUser || !supabaseClient) return;
+    const displayName = settingsName.value.trim();
+    if (displayName.length > 40) {
+      settingsMessage.textContent = "Display name must be 40 characters or fewer.";
+      return;
+    }
+    const patch = {
+      display_name: displayName || null,
+      show_email: settingsShowEmail.checked,
+      show_discord_id: settingsShowId.checked,
+      updated_at: new Date().toISOString()
+    };
+
+    settingsSave.disabled = true;
+    settingsMessage.textContent = "Saving settings…";
+    let result = await supabaseClient.from("profiles").update(patch).eq("id", currentUser.id).select("id");
+    let error = result.error;
+    if (!error && (!result.data || !result.data.length)) {
+      // No profile row yet (account created before the trigger existed): create it.
+      const meta = metaOf(currentUser);
+      const created = await supabaseClient.from("profiles").insert({
+        id: currentUser.id,
+        display_name: patch.display_name,
+        avatar_url: meta.avatar_url || meta.picture || null,
+        show_email: patch.show_email,
+        show_discord_id: patch.show_discord_id
+      });
+      error = created.error;
+    }
+    settingsSave.disabled = false;
+
+    if (error) {
+      settingsMessage.textContent = "Couldn't save settings: " + error.message;
+      return;
+    }
+
+    currentProfile = Object.assign({}, currentProfile, patch);
+    formTouched = false;
+    applyProfile(currentUser, currentProfile, true);
+    settingsMessage.textContent = "Settings saved.";
+  });
+
+  loginButton.addEventListener("click", async function () {
+    if (!supabaseClient) return;
+    clearError();
+    loginButton.disabled = true;
+    const { error } = await supabaseClient.auth.signInWithOAuth({
+      provider: "discord",
+      options: { redirectTo: window.location.href.split("#")[0] }
+    });
+    if (error) {
+      showError("Discord sign-in couldn't start: " + error.message);
+      loginButton.disabled = false;
+    }
+  });
+
+  logoutButton.addEventListener("click", async function () {
+    if (!supabaseClient) return;
+    logoutButton.disabled = true;
+    const { error } = await supabaseClient.auth.signOut();
+    if (error) showError("Couldn't sign out: " + error.message);
+    logoutButton.disabled = false;
+  });
+
+  document.addEventListener("click", function (e) {
+    if (e.target.closest(".to-top")) window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  if (!window.supabase) {
+    // The library didn't load (offline, blocked by an extension, wrong hash…).
+    loadingEl.hidden = true;
+    loginButton.disabled = true;
+    signedOutEl.hidden = false;
+    showError("Sign-in is unavailable right now. Please try again later.");
+  } else {
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+    // Don't call Supabase from inside this callback (it can deadlock), so hand off to the next tick.
+    supabaseClient.auth.onAuthStateChange(function (_event, session) {
+      setTimeout(function () { handleSession(session); }, 0);
+    });
+    supabaseClient.auth.getSession().then(function ({ data, error }) {
+      if (error) {
+        loadingEl.hidden = true;
+        signedOutEl.hidden = false;
+        showError("Couldn't check your sign-in status: " + error.message);
+        return;
+      }
+      handleSession(data.session);
+    });
+  }
+</script>
+</body>
+</html>
