@@ -528,6 +528,23 @@
   .legal #apply-desc { white-space: pre-line; color: var(--muted); }
   #apply-form-wrap { margin-top: 28px; }
   #apply-form-wrap > .app-row { grid-template-columns: minmax(0, 1fr) auto auto; }
+  .apply-progress-label { margin: 0 0 8px; color: var(--muted); font-size: .85rem; font-weight: 600; }
+  .apply-progress { height: 7px; overflow: hidden; border-radius: 999px; background: var(--tint); }
+  .apply-progress-fill { display: block; height: 100%; border-radius: inherit; background: var(--bg); transition: width .2s ease; }
+  .apply-step { margin-top: 18px; padding: 22px; border: 1px solid var(--line); border-radius: 18px; background: #fff; }
+  .apply-step[hidden], .apply-step-actions [hidden] { display: none !important; }
+  .apply-step-title { margin: 0; color: var(--bg); font-size: 1.25rem; }
+  .apply-step-title:focus { outline: 3px solid rgba(22,32,118,.16); outline-offset: 4px; }
+  .apply-section-description { color: var(--muted); white-space: pre-line; }
+  .apply-step-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-top: 18px; }
+  .apply-step-actions .btn { min-height: 42px; padding: 8px 18px; font: inherit; font-weight: 600; cursor: pointer; }
+  .apply-step-actions .profile-button { margin-top: 0; margin-left: auto; }
+  .apply-form-note { min-height: 1.3em; }
+  @media (max-width: 520px) {
+    .apply-step { padding: 18px; }
+    .apply-step-actions .btn { flex: 1 1 100%; }
+    .apply-step-actions .profile-button { margin-left: 0; }
+  }
 </style>
 </head>
 <body>
