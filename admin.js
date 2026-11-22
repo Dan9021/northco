@@ -523,7 +523,7 @@
   // ------------------------------------------------------------- questions
   function buildQuestions(opening) {
     var details = el("details", "admin-details");
-    details.append(el("summary", null, "Application questions"));
+    details.append(el("summary", null, "Application form sections"));
     var body = el("div", "admin-questions");
     details.append(body);
     var loaded = false;
@@ -537,22 +537,117 @@
   }
 
   async function renderQuestions(opening, body) {
-    body.replaceChildren(el("p", "jobs-state", "Loading questions…"));
-    var result = await client.from("application_questions")
-      .select("*")
-      .eq("opening_id", opening.id)
-      .order("position", { ascending: true })
-      .order("created_at", { ascending: true });
+    body.replaceChildren(el("p", "jobs-state", "Loading form sections…"));
+    var results = await Promise.all([
+      client.from("application_sections").select("*").eq("opening_id", opening.id)
+        .order("position", { ascending: true }).order("created_at", { ascending: true }),
+      client.from("application_questions").select("*").eq("opening_id", opening.id)
+        .order("position", { ascending: true }).order("created_at", { ascending: true })
+    ]);
     body.replaceChildren();
-    if (result.error) {
-      body.append(el("p", "jobs-state", "Couldn't load the questions: " + friendlyError(result.error)));
+    if (results[0].error || results[1].error) {
+      var error = results[0].error || results[1].error;
+      body.append(el("p", "jobs-state", "Couldn't load the application form: " + friendlyError(error)));
       return;
     }
-    var list = result.data || [];
-    body.append(el("p", "admin-meta", "Applicants answer these on the role page. Changing a question never changes applications that were already sent."));
-    if (!list.length) body.append(el("p", "jobs-state", "No questions yet. Applicants can't apply until you add one."));
-    list.forEach(function (q, index) { body.append(buildQuestionRow(opening, q, index, list, body)); });
-    body.append(buildQuestionAdder(opening, list, body));
+    var sections = results[0].data || [];
+    var questions = results[1].data || [];
+    body.append(el("p", "admin-meta", "Each section becomes a separate step for applicants. Reordering or editing the form will not change applications already sent."));
+    sections.forEach(function (section, index) {
+      var sectionQuestions = questions.filter(function (q) { return q.section_id === section.id; });
+      body.append(buildSectionEditor(opening, section, index, sections, sectionQuestions, body));
+      sectionQuestions.forEach(function (q, questionIndex) {
+        body.append(buildQuestionRow(opening, section, q, questionIndex, sectionQuestions, body));
+      });
+      body.append(buildQuestionAdder(opening, section, sectionQuestions, body));
+    });
+    if (!sections.length) body.append(el("p", "jobs-state", "No sections yet. Add a section to start building the application."));
+    body.append(button("Add section", "btn-primary admin-add-section", async function () {
+      var position = sections.reduce(function (max, section) { return Math.max(max, section.position || 0); }, 0) + 1;
+      var result = await client.from("application_sections").insert({
+        opening_id: opening.id,
+        title: "New section",
+        description: "",
+        position: position
+      });
+      if (result.error) { say("Couldn't add the section: " + friendlyError(result.error)); return; }
+      say("Section added.");
+      await renderQuestions(opening, body);
+    }));
+  }
+
+  function buildSectionEditor(opening, section, index, sections, sectionQuestions, body) {
+    var card = el("section", "admin-section");
+    var heading = el("div", "admin-section-heading");
+    heading.append(el("span", "admin-section-index", "STEP " + (index + 1)));
+    heading.append(el("h3", null, section.title));
+    card.append(heading);
+
+    var title = el("input", "settings-input");
+    title.type = "text";
+    title.maxLength = 120;
+    title.value = section.title || "";
+    var description = el("textarea", "settings-input");
+    description.maxLength = 500;
+    description.rows = 2;
+    description.value = section.description || "";
+    description.placeholder = "Optional description shown to applicants";
+    var fields = el("div", "admin-section-grid");
+    fields.append(
+      labelled("Section title", title, "section-title-" + section.id),
+      labelled("Description", description, "section-description-" + section.id)
+    );
+    card.append(fields);
+
+    var actions = el("div", "admin-actions");
+    var up = button("↑ Move up", "btn-ghost", function () { moveSection(opening, sections, index, -1, card, body); });
+    var down = button("↓ Move down", "btn-ghost", function () { moveSection(opening, sections, index, 1, card, body); });
+    up.disabled = index === 0;
+    down.disabled = index === sections.length - 1;
+    actions.append(
+      button("Save section", "btn-primary", async function () {
+        var values = { title: title.value.trim(), description: description.value.trim() };
+        if (!values.title) { say("A section needs a title."); title.focus(); return; }
+        setBusy(card, true);
+        var result = await client.from("application_sections").update(values).eq("id", section.id);
+        if (result.error) { setBusy(card, false); say("Couldn't save the section: " + friendlyError(result.error)); return; }
+        say("Section saved.");
+        await renderQuestions(opening, body);
+      }),
+      up,
+      down,
+      button("Delete section", "btn-danger", async function () {
+        if (sections.length < 2) { say("Keep at least one section in the application form."); return; }
+        if (!window.confirm("Delete this section? Its questions will move to another section.")) return;
+        var target = sections[index === 0 ? 1 : index - 1];
+        setBusy(card, true);
+        if (sectionQuestions.length) {
+          var moved = await client.from("application_questions").update({ section_id: target.id }).eq("section_id", section.id);
+          if (moved.error) { setBusy(card, false); say("Couldn't move the section's questions: " + friendlyError(moved.error)); return; }
+        }
+        var result = await client.from("application_sections").delete().eq("id", section.id);
+        if (result.error) { setBusy(card, false); say("Couldn't delete the section: " + friendlyError(result.error)); await renderQuestions(opening, body); return; }
+        say("Section deleted.");
+        await renderQuestions(opening, body);
+      })
+    );
+    card.append(actions);
+    return card;
+  }
+
+  async function moveSection(opening, sections, index, delta, card, body) {
+    var target = index + delta;
+    if (target < 0 || target >= sections.length) return;
+    setBusy(card, true);
+    var order = sections.slice();
+    var moved = order.splice(index, 1)[0];
+    order.splice(target, 0, moved);
+    var updates = await Promise.all(order.map(function (section, i) {
+      return client.from("application_sections").update({ position: i + 1 }).eq("id", section.id);
+    }));
+    var failed = updates.filter(function (result) { return result.error; })[0];
+    if (failed) say("Couldn't reorder the sections: " + friendlyError(failed.error));
+    await renderQuestions(opening, body);
   }
 
   function questionControls(q) {
@@ -591,7 +686,7 @@
     return { label: label, help: c.help.value.trim(), kind: c.kind.value, max_length: max, required: c.required.checked };
   }
 
-  function buildQuestionRow(opening, q, index, list, body) {
+  function buildQuestionRow(opening, section, q, index, list, body) {
     var row = el("div", "admin-q");
     var c = questionControls(q);
     var checkWrap = el("label", "settings-check");
@@ -641,38 +736,33 @@
     var order = list.slice();
     var moved = order.splice(index, 1)[0];
     order.splice(target, 0, moved);
-    // Renumber 1..n so positions stay clean even if two questions had the same number.
-    var updates = [];
-    order.forEach(function (q, i) {
-      if (q.position !== i + 1) {
-        updates.push(client.from("application_questions").update({ position: i + 1 }).eq("id", q.id));
-      }
-    });
-    var results = await Promise.all(updates);
-    var failed = results.filter(function (r) { return r.error; })[0];
+    var updates = await Promise.all(order.map(function (q, i) {
+      return client.from("application_questions").update({ position: i + 1 }).eq("id", q.id);
+    }));
+    var failed = updates.filter(function (result) { return result.error; })[0];
     if (failed) say("Couldn't reorder the questions: " + friendlyError(failed.error));
     await renderQuestions(opening, body);
   }
 
-  function buildQuestionAdder(opening, list, body) {
+  function buildQuestionAdder(opening, section, list, body) {
     var box = el("div", "admin-q admin-q-new");
     var c = questionControls({ kind: "long", max_length: 1500, required: true });
     var checkWrap = el("label", "settings-check");
     checkWrap.append(c.required, el("span", null, "Required"));
     var grid = el("div", "admin-q-grid");
     grid.append(
-      labelled("New question", c.label, "q-new-label-" + opening.id),
-      labelled("Hint", c.help, "q-new-help-" + opening.id),
-      labelled("Type", c.kind, "q-new-kind-" + opening.id),
-      labelled("Max characters", c.max, "q-new-max-" + opening.id)
+      labelled("New question", c.label, "q-new-label-" + section.id),
+      labelled("Hint", c.help, "q-new-help-" + section.id),
+      labelled("Type", c.kind, "q-new-kind-" + section.id),
+      labelled("Max characters", c.max, "q-new-max-" + section.id)
     );
     var actions = el("div", "admin-actions");
     actions.append(button("Add question", "btn-primary", async function () {
       var values = readQuestion(c);
       if (!values) return;
       values.opening_id = opening.id;
-      var last = list.reduce(function (m, q) { return Math.max(m, q.position || 0); }, 0);
-      values.position = last + 1;
+      values.section_id = section.id;
+      values.position = list.reduce(function (max, q) { return Math.max(max, q.position || 0); }, 0) + 1;
       setBusy(box, true);
       var result = await client.from("application_questions").insert(values);
       if (result.error) { setBusy(box, false); say("Couldn't add the question: " + friendlyError(result.error)); return; }

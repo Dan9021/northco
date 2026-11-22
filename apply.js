@@ -22,6 +22,9 @@
   var user = null;
   var shownUserId;            // undefined until the first session has been handled
   var opening = null;
+  var sections = [];
+  var sectionsLoadError = false;
+  var questionsLoadError = false;
   var questions = [];
   var mine = [];
   var loadSeq = 0;
@@ -144,59 +147,131 @@
 
   function buildForm() {
     var form = el("form", "job-form apply-form");
+    var panels = [];
     var controls = [];
+    var controlsBySection = Object.create(null);
+    var currentStep = 0;
+    var progressLabel = el("p", "apply-progress-label");
+    progressLabel.setAttribute("aria-live", "polite");
+    var progress = el("div", "apply-progress");
+    progress.setAttribute("role", "progressbar");
+    progress.setAttribute("aria-label", "Application progress");
+    progress.setAttribute("aria-valuemin", "1");
+    progress.setAttribute("aria-valuemax", String(sections.length));
+    var progressFill = el("span", "apply-progress-fill");
+    progress.append(progressFill);
+    form.append(progressLabel, progress);
 
-    questions.forEach(function (q) {
-      var label = el("label", "settings-field");
-      var id = "q-" + q.id;
-      label.setAttribute("for", id);
-      label.append(q.label);
-      if (q.required) {
-        var mark = el("span", "req-mark", " *");
-        mark.setAttribute("aria-hidden", "true");
-        label.append(mark);
+    sections.forEach(function (section, sectionIndex) {
+      var panel = el("section", "apply-step");
+      panel.setAttribute("aria-labelledby", "apply-section-title-" + section.id);
+      var heading = el("h3", "apply-section-title", section.title);
+      heading.id = "apply-section-title-" + section.id;
+      heading.tabIndex = -1;
+      panel.append(heading);
+      if (section.description) panel.append(el("p", "apply-section-description", section.description));
+      controlsBySection[section.id] = [];
+
+      questions.filter(function (q) { return q.section_id === section.id; }).forEach(function (q) {
+        var label = el("label", "settings-field");
+        var id = "q-" + q.id;
+        label.setAttribute("for", id);
+        label.append(q.label);
+        if (q.required) {
+          var mark = el("span", "req-mark", " *");
+          mark.setAttribute("aria-hidden", "true");
+          label.append(mark);
+        }
+        var control;
+        if (q.kind === "short") {
+          control = el("input", "settings-input");
+          control.type = "text";
+          control.autocomplete = "off";
+        } else {
+          control = el("textarea", "settings-input");
+          control.rows = 4;
+        }
+        control.id = id;
+        control.maxLength = q.max_length;
+        control.setAttribute("aria-required", String(!!q.required));
+        var savedValue = draftAnswers[q.id];
+        if (typeof savedValue === "string") control.value = savedValue;
+        if (q.help) {
+          var hint = el("span", "apply-hint", q.help);
+          hint.id = id + "-hint";
+          control.setAttribute("aria-describedby", hint.id);
+          label.append(hint);
+        }
+        label.append(control);
+        panel.append(label);
+        var item = { question: q, control: control };
+        controls.push(item);
+        controlsBySection[section.id].push(item);
+      });
+
+      panels.push(panel);
+      form.append(panel);
+      if (sectionIndex === sections.length - 1) {
+        var consent = el("label", "settings-check apply-consent");
+        var box = el("input");
+        box.type = "checkbox";
+        box.setAttribute("aria-label", "I agree to the privacy notice");
+        var consentText = el("span");
+        consentText.append("I understand that Northco admins will see this application, as described in the ");
+        var link = el("a", null, "Privacy Policy");
+        link.href = "privacy.html";
+        consentText.append(link, ".");
+        consent.append(box, consentText);
+        panel.append(consent);
+        form._consent = box;
       }
-      var control;
-      if (q.kind === "short") {
-        control = el("input", "settings-input");
-        control.type = "text";
-        control.autocomplete = "off";
-      } else {
-        control = el("textarea", "settings-input");
-        control.rows = 4;
-      }
-      control.id = id;
-      control.maxLength = q.max_length;
-      control.required = !!q.required;
-      var savedValue = draftAnswers[q.id];
-      if (typeof savedValue === "string") control.value = savedValue;
-      if (q.help) {
-        var hint = el("span", "apply-hint", q.help);
-        hint.id = id + "-hint";
-        control.setAttribute("aria-describedby", hint.id);
-        label.append(hint);
-      }
-      label.append(control);
-      form.append(label);
-      controls.push({ question: q, control: control });
     });
 
-    var consent = el("label", "settings-check");
-    var box = el("input");
-    box.type = "checkbox";
-    box.required = true;
-    var consentText = el("span");
-    consentText.append("I understand that Northco admins will see this application, as described in the ");
-    var link = el("a", null, "Privacy Policy");
-    link.href = "privacy.html";
-    consentText.append(link, ".");
-    consent.append(box, consentText);
-
+    var actions = el("div", "apply-step-actions");
+    var back = el("button", "btn btn-ghost", "Back");
+    back.type = "button";
+    back.addEventListener("click", function () {
+      if (currentStep > 0) {
+        currentStep -= 1;
+        renderStep(true);
+      }
+    });
+    var next = el("button", "btn btn-primary", "Next");
+    next.type = "button";
+    next.addEventListener("click", function () {
+      var currentSection = sections[currentStep];
+      var missing = (controlsBySection[currentSection.id] || []).filter(function (item) {
+        return item.question.required && !item.control.value.trim();
+      })[0];
+      if (missing) {
+        say("Please answer: " + missing.question.label);
+        missing.control.focus();
+        return;
+      }
+      if (currentStep < sections.length - 1) {
+        currentStep += 1;
+        renderStep(true);
+      }
+    });
     var submit = el("button", "btn btn-primary profile-button", "Send application");
     submit.type = "submit";
-    var note = el("p", "settings-note");
+    actions.append(back, next, submit);
+    form.append(actions);
+
+    var note = el("p", "settings-note apply-form-note");
     note.setAttribute("role", "status");
-    form.append(consent, submit, note);
+    form.append(note);
+
+    function renderStep(shouldFocus) {
+      panels.forEach(function (panel, index) { panel.hidden = index !== currentStep; });
+      progressLabel.textContent = "Section " + (currentStep + 1) + " of " + sections.length;
+      progress.setAttribute("aria-valuenow", String(currentStep + 1));
+      progressFill.style.width = ((currentStep + 1) / sections.length * 100) + "%";
+      back.hidden = currentStep === 0;
+      next.hidden = currentStep === sections.length - 1;
+      submit.hidden = currentStep !== sections.length - 1;
+      if (shouldFocus && panels[currentStep]) panels[currentStep].querySelector("h3").focus();
+    }
 
     controls.forEach(function (item) {
       item.control.addEventListener("input", function () {
@@ -211,20 +286,34 @@
 
     form.addEventListener("submit", function (event) {
       event.preventDefault();
-      var answers = {};
       var missing = null;
-      controls.forEach(function (c) {
-        var value = c.control.value.trim();
-        if (value) answers[c.question.id] = value;
-        else if (c.question.required && !missing) missing = c;
-      });
+      for (var i = 0; i < sections.length && !missing; i += 1) {
+        var sectionControls = controlsBySection[sections[i].id] || [];
+        missing = sectionControls.filter(function (item) {
+          return item.question.required && !item.control.value.trim();
+        })[0] || null;
+        if (missing) {
+          currentStep = i;
+          renderStep(true);
+        }
+      }
       if (missing) {
-        note.textContent = "Please answer: " + missing.question.label;
+        say("Please answer: " + missing.question.label);
         missing.control.focus();
         return;
       }
+      if (!form._consent.checked) {
+        currentStep = sections.length - 1;
+        renderStep(true);
+        say("Please review and accept the privacy notice to continue.");
+        form._consent.focus();
+        return;
+      }
+      var answers = collectAnswers(controls);
       send(answers, submit, note);
     });
+
+    renderStep(false);
     return form;
   }
 
@@ -283,7 +372,11 @@
     if (mine.length) {
       formWrap.append(el("p", "jobs-state", "Your previous application for this role wasn't accepted. You can apply again."));
     }
-    if (!questions.length) {
+    if (sectionsLoadError || questionsLoadError) {
+      formWrap.append(el("p", "jobs-state", "The application form is unavailable right now. Please try again later."));
+      return;
+    }
+    if (!sections.length || !questions.length) {
       formWrap.append(el("p", "jobs-state", "This role has no application form yet. Please check back soon."));
       return;
     }
@@ -297,8 +390,13 @@
         .select("id, title, description, requirements, is_open")
         .eq("id", roleId)
         .maybeSingle(),
+      client.from("application_sections")
+        .select("id, title, description, position, created_at")
+        .eq("opening_id", roleId)
+        .order("position", { ascending: true })
+        .order("created_at", { ascending: true }),
       client.from("application_questions")
-        .select("id, position, label, help, kind, required, max_length")
+        .select("id, section_id, position, label, help, kind, required, max_length, created_at")
         .eq("opening_id", roleId)
         .order("position", { ascending: true })
         .order("created_at", { ascending: true }),
@@ -326,11 +424,14 @@
       return;
     }
     opening = results[0].data;
-    questions = results[1].error ? [] : (results[1].data || []);
-    mine = results[2].error ? [] : (results[2].data || []);
-    draftLoadError = !!results[3].error;
-    draftAnswers = results[3].data && results[3].data.answers && typeof results[3].data.answers === "object"
-      ? results[3].data.answers
+    sectionsLoadError = !!results[1].error;
+    sections = sectionsLoadError ? [] : (results[1].data || []);
+    questionsLoadError = !!results[2].error;
+    questions = questionsLoadError ? [] : (results[2].data || []);
+    mine = results[3].error ? [] : (results[3].data || []);
+    draftLoadError = !!results[4].error;
+    draftAnswers = results[4].data && results[4].data.answers && typeof results[4].data.answers === "object"
+      ? results[4].data.answers
       : {};
     renderRole();
     renderAccount();
