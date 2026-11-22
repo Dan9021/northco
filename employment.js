@@ -115,23 +115,62 @@
     });
   }
 
+  function formattedDate(value) {
+    if (!value) return "Not available";
+    var date = new Date(value);
+    return Number.isNaN(date.getTime()) ? "Not available" : date.toLocaleDateString(undefined, {
+      year: "numeric", month: "short", day: "numeric"
+    });
+  }
+
+  function nextStepFor(status) {
+    if (status === "accepted") return "Your application has been accepted. Check Discord for onboarding instructions from the team.";
+    if (status === "rejected") return "The review is complete. You can explore other open roles or contact the team if you have questions.";
+    return "Your application is waiting for review. The team will contact you on Discord when there is an update.";
+  }
+
   function renderMine() {
     mineList.replaceChildren();
     mineSection.hidden = !user || !mine.length;
     mine.forEach(function (app) {
-      var row = el("div", "app-row");
-      var copy = el("div", "app-row-copy");
-      copy.append(el("strong", null, app.role_title));
-      copy.append(el("span", null, "Sent " + new Date(app.created_at).toLocaleDateString()));
+      var card = el("article", "app-card");
+      var head = el("div", "app-card-head");
+      var title = el("div", "app-card-title");
+      title.append(el("h3", null, app.role_title));
+      title.append(el("p", null, "Submitted " + formattedDate(app.created_at)));
       var badge = el("span", "app-badge app-" + app.status, STATUS_LABEL[app.status] || app.status);
-      row.append(copy, badge);
+      badge.setAttribute("aria-label", "Application status: " + (STATUS_LABEL[app.status] || app.status));
+      head.append(title, badge);
+      card.append(head);
+
+      var tracker = el("div", "app-tracker");
+      tracker.setAttribute("aria-label", "Application progress");
+      var received = el("div", "app-tracker-step is-done");
+      received.append(el("span", "app-tracker-dot", "1"), el("span", null, "Submitted"));
+      var review = el("div", "app-tracker-step" + (app.status === "pending" ? " is-current" : " is-done"));
+      review.append(el("span", "app-tracker-dot", "2"), el("span", null, app.status === "pending" ? "In review" : "Review complete"));
+      tracker.append(received, review);
+      card.append(tracker);
+
+      var details = el("div", "app-details");
+      var submitted = el("div", "app-detail");
+      submitted.append(el("strong", null, "Submitted"), el("span", null, formattedDate(app.created_at)));
+      var deadline = el("div", "app-detail");
+      deadline.append(el("strong", null, "Decision deadline"), el("span", null, "Not set by the team"));
+      details.append(submitted, deadline);
+      card.append(details);
+
+      var next = el("div", "app-next-step");
+      next.append(el("strong", null, "What happens next"), el("p", null, nextStepFor(app.status)));
+      card.append(next);
+
       if (app.status === "pending") {
-        var button = el("button", "btn btn-ghost app-withdraw", "Withdraw");
+        var button = el("button", "btn btn-ghost app-withdraw", "Withdraw application");
         button.type = "button";
         button.addEventListener("click", function () { withdraw(app); });
-        row.append(button);
+        card.append(button);
       }
-      mineList.append(row);
+      mineList.append(card);
     });
   }
 
