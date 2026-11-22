@@ -626,6 +626,7 @@
             <button class="admin-tab" type="button" role="tab" id="tab-applications" data-tab="applications" aria-controls="panel-applications" aria-selected="false" tabindex="-1">Applications</button>
             <button class="admin-tab" type="button" role="tab" id="tab-openings" data-tab="openings" aria-controls="panel-openings" aria-selected="false" tabindex="-1">Roles</button>
             <button class="admin-tab" type="button" role="tab" id="tab-users" data-tab="users" aria-controls="panel-users" aria-selected="false" tabindex="-1">Members</button>
+            <button class="admin-tab" type="button" role="tab" id="tab-terms" data-tab="terms" aria-controls="panel-terms" aria-selected="false" tabindex="-1">Terms of Service</button>
           </div>
           <p id="admin-message" class="settings-note" role="status" aria-live="polite"></p>
 
@@ -641,6 +642,18 @@
               </label>
               <button class="btn btn-primary profile-button" type="submit">Save notice</button>
               <p id="notice-note" class="settings-note" role="status" aria-live="polite"></p>
+            </form>
+          </section>
+
+          <section id="panel-terms" class="admin-panel" role="tabpanel" aria-labelledby="tab-terms" hidden>
+            <h2>Terms of Service</h2>
+            <p>Edit the public terms page. Use # for a heading, ## for a section heading, and - for list items.</p>
+            <form id="terms-form">
+              <label class="settings-field" for="terms-input">Terms content
+                <textarea id="terms-input" class="settings-input" rows="22" maxlength="30000" required spellcheck="true"></textarea>
+              </label>
+              <button class="btn btn-primary profile-button" type="submit">Save terms</button>
+              <p id="terms-note" class="settings-note" role="status" aria-live="polite"></p>
             </form>
           </section>
 
